@@ -9,33 +9,38 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "articles", indexes = {
-        @Index(name = "idx_articles_author", columnList = "author_id")
-})
+@Table(name = "reviews",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"article_id", "author_id"})
+        },
+        indexes = {
+                @Index(name = "idx_reviews_article", columnList = "article_id")
+        })
 @AllArgsConstructor
 @NoArgsConstructor
-public class Article {
+public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "author_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "article_id")
+    private Article article;
+
+    @ManyToOne
+    @JoinColumn(name = "author_id")
     private User author;
 
-    @Column(name = "title", nullable = false, length = 70)
+    @Column(name = "title", length = 70)
     private String title;
 
-    @Column(name = "short_description", length = 100)
-    private String shortDescription;
-
-    @Column(name = "article_text", columnDefinition = "TEXT")
-    private String text;
+    @Column(name = "review_text", columnDefinition = "TEXT")
+    private String reviewText;
 
     @Column(name = "is_published")
     private boolean isPublished = false;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
