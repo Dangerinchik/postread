@@ -71,6 +71,44 @@
       background-color: #2980b9 !important;
     }
 
+    .text-formatting-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f1f3f4;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .text-formatting-toolbar select,
+    .text-formatting-toolbar input {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    .format-btn {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .format-btn:hover {
+      background-color: #e9ecef;
+    }
+
+    .format-btn.active {
+      background-color: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+
     .blocks-container {
       min-height: 500px;
       border: 1px solid #ddd;
@@ -81,7 +119,6 @@
 
     .block {
       margin-bottom: 20px;
-      padding: 15px;
       background: white;
       border: 1px solid #e9ecef;
       border-radius: 6px;
@@ -94,7 +131,8 @@
     }
 
     .text-block {
-      min-height: 100px;
+      /* Высота будет подстраиваться под содержимое */
+      min-height: 60px;
     }
 
     .media-block {
@@ -102,22 +140,36 @@
       padding: 20px;
     }
 
-    .text-editor {
+    .rich-text-editor {
       width: 100%;
-      min-height: 100px;
-      padding: 12px;
-      border: 1px solid #ddd;
+      min-height: 60px;
+      padding: 15px;
+      border: none;
       border-radius: 4px;
-      font-size: 16px;
       line-height: 1.5;
-      resize: vertical;
+      resize: none;
       font-family: inherit;
+      background: white;
+      overflow: hidden;
+      /* Автоматическая высота */
+      height: auto;
+      /* Обработка длинных слов */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      /* Убираем стандартное поведение contenteditable */
+      white-space: pre-wrap;
     }
 
-    .text-editor:focus {
+    .rich-text-editor:focus {
       outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      background-color: #f8f9fa;
+    }
+
+    .rich-text-editor[placeholder]:empty:before {
+      content: attr(placeholder);
+      color: #6c757d;
+      font-style: italic;
     }
 
     .media-content {
@@ -225,11 +277,80 @@
       opacity: 0.6;
       pointer-events: none;
     }
+
+    .global-text-settings {
+      background-color: #e8f4fd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #b3d9ff;
+    }
+
+    .global-text-settings h3 {
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-size: 16px;
+    }
+
+    .global-controls {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .global-controls label {
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .global-controls select {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    /* Стили для обработки длинных слов */
+    .word-wrap-handler {
+      /* Автоматический перенос длинных слов */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      /* Сохраняем переносы строк */
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <h1>📝 Блочный редактор статьи</h1>
+
+  <!-- Глобальные настройки текста -->
+  <div class="global-text-settings">
+    <h3>⚙️ Глобальные настройки текста</h3>
+    <div class="global-controls">
+      <div>
+        <label for="globalFontFamily">Шрифт:</label>
+        <select id="globalFontFamily" onchange="applyGlobalFontFamily()">
+          <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="'Courier New', monospace">Courier New</option>
+        </select>
+      </div>
+      <div>
+        <label for="globalFontSize">Размер:</label>
+        <select id="globalFontSize" onchange="applyGlobalFontSize()">
+          <option value="14px">Маленький</option>
+          <option value="16px" selected>Средний</option>
+          <option value="18px">Большой</option>
+          <option value="20px">Очень большой</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
   <div class="toolbar">
     <button type="button" onclick="addTextBlock()" class="btn-primary">
@@ -256,6 +377,58 @@
 </div>
 
 <script>
+  // Глобальные переменные для настроек текста
+  let globalFontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+  let globalFontSize = "16px";
+  let currentEditingBlock = null;
+
+  // Функция для автоматической регулировки высоты текстового блока
+  function autoResizeTextBlock(element) {
+    // Сохраняем текущую позицию курсора
+    const selection = window.getSelection();
+    const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+    const currentCursorPosition = range ? range.startOffset : 0;
+
+    // Сбрасываем высоту чтобы получить правильный scrollHeight
+    element.style.height = 'auto';
+
+    // Устанавливаем высоту равную scrollHeight + небольшой отступ
+    const newHeight = Math.max(element.scrollHeight, 60); // Минимальная высота 60px
+    element.style.height = newHeight + 'px';
+
+    // Восстанавливаем позицию курсора
+    if (range && currentCursorPosition > 0) {
+      try {
+        const textNode = element.childNodes[0] || element;
+        if (textNode.nodeType === Node.TEXT_NODE || element.childNodes.length === 0) {
+          const newRange = document.createRange();
+          newRange.setStart(textNode, Math.min(currentCursorPosition, textNode.length || 0));
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      } catch (e) {
+        console.log('Could not restore cursor position:', e);
+      }
+    }
+  }
+
+  // Функция для обработки длинных слов
+  function handleLongWords(element) {
+    // ContentEditable автоматически обрабатывает перенос слов благодаря CSS
+    // Но мы можем добавить дополнительную логику если нужно
+    const text = element.innerText || element.textContent;
+
+    // Проверяем есть ли очень длинные слова (более 20 символов)
+    const words = text.split(/\s+/);
+    const veryLongWords = words.filter(word => word.length > 20);
+
+    if (veryLongWords.length > 0) {
+      console.log('Обнаружены очень длинные слова:', veryLongWords);
+      // CSS уже обрабатывает это через word-break: break-word
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     const editor = document.getElementById('blocksContainer');
     const nextBtn = document.getElementById('nextBtn');
@@ -275,8 +448,10 @@
         let file = null;
 
         if (blockType === 'text') {
-          const textarea = block.querySelector('textarea');
-          content = textarea ? textarea.value : '';
+          const richEditor = block.querySelector('.rich-text-editor');
+          if (richEditor) {
+            content = richEditor.innerHTML;
+          }
         } else if (blockType === 'media') {
           const fileInput = block.querySelector('input[type="file"]');
           const pathInput = block.querySelector('input[type="text"]');
@@ -312,14 +487,52 @@
       const block = document.createElement('div');
       block.className = 'block text-block';
       block.innerHTML = `
-                <div class="block-controls">
-                    <button type="button" class="btn-move" onclick="moveBlockUp(this)">↑</button>
-                    <button type="button" class="btn-move" onclick="moveBlockDown(this)">↓</button>
-                    <button type="button" class="btn-remove" onclick="removeBlock(this)">×</button>
-                </div>
-                <textarea class="text-editor" placeholder="Введите текст...">${content}</textarea>
-            `;
+        <div class="block-controls">
+          <button type="button" class="btn-move" onclick="moveBlockUp(this)">↑</button>
+          <button type="button" class="btn-move" onclick="moveBlockDown(this)">↓</button>
+          <button type="button" class="btn-remove" onclick="removeBlock(this)">×</button>
+        </div>
+        <div class="text-formatting-toolbar">
+          <button type="button" class="format-btn" onclick="formatText('bold')" title="Жирный"><b>B</b></button>
+          <button type="button" class="format-btn" onclick="formatText('italic')" title="Курсив"><i>I</i></button>
+          <button type="button" class="format-btn" onclick="formatText('underline')" title="Подчеркнутый"><u>U</u></button>
+          <select onchange="formatText('fontName', this.value)" title="Шрифт">
+            <option value="">Шрифт</option>
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+          </select>
+          <input type="color" onchange="formatText('foreColor', this.value)" title="Цвет текста">
+          <select onchange="formatText('fontSize', this.value)" title="Размер">
+            <option value="">Размер</option>
+            <option value="1">Маленький</option>
+            <option value="3">Нормальный</option>
+            <option value="5">Большой</option>
+            <option value="7">Очень большой</option>
+          </select>
+          <button type="button" class="format-btn" onclick="formatText('justifyLeft')" title="Выравнивание по левому краю">⬅</button>
+          <button type="button" class="format-btn" onclick="formatText('justifyCenter')" title="Выравнивание по центру">↔</button>
+          <button type="button" class="format-btn" onclick="formatText('justifyRight')" title="Выравнивание по правому краю">➡</button>
+          <button type="button" class="format-btn" onclick="formatText('justifyFull')" title="Выравнивание по ширине">⤢</button>
+        </div>
+        <div class="rich-text-editor word-wrap-handler"
+             contenteditable="true"
+             onfocus="setCurrentBlock(this)"
+             oninput="autoResizeTextBlock(this)"
+             placeholder="Введите текст..."
+             style="font-family: ${globalFontFamily}; font-size: ${globalFontSize};">
+          ${content}
+        </div>
+      `;
       editor.appendChild(block);
+
+      // Автоматически настраиваем высоту для нового блока
+      const newEditor = block.querySelector('.rich-text-editor');
+      if (newEditor) {
+        setTimeout(() => autoResizeTextBlock(newEditor), 10);
+      }
+
       updateNextButton();
     };
 
@@ -330,41 +543,89 @@
       const block = document.createElement('div');
       block.className = 'block media-block';
       block.innerHTML = `
-                <div class="block-controls">
-                    <button type="button" class="btn-move" onclick="moveBlockUp(this)">↑</button>
-                    <button type="button" class="btn-move" onclick="moveBlockDown(this)">↓</button>
-                    <button type="button" class="btn-remove" onclick="removeBlock(this)">×</button>
-                </div>
-                <div class="media-content">
-                    <input type="file" accept="image/*,video/*,audio/*" style="margin-bottom: 10px;" onchange="previewMedia(this)">
-                    <div style="text-align: center; margin: 8px 0; color: #666;">ИЛИ</div>
-                    <input type="text" placeholder="Введите путь к файлу..." value="${filePath}"
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                    <div class="media-preview"></div>
-                </div>
-            `;
+        <div class="block-controls">
+          <button type="button" class="btn-move" onclick="moveBlockUp(this)">↑</button>
+          <button type="button" class="btn-move" onclick="moveBlockDown(this)">↓</button>
+          <button type="button" class="btn-remove" onclick="removeBlock(this)">×</button>
+        </div>
+        <div class="media-content">
+          <input type="file" accept="image/*,video/*,audio/*" style="margin-bottom: 10px;" onchange="previewMedia(this)">
+          <div style="text-align: center; margin: 8px 0; color: #666;">ИЛИ</div>
+          <input type="text" placeholder="Введите путь к файлу..." value="${filePath}"
+                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="media-preview"></div>
+        </div>
+      `;
       editor.appendChild(block);
       updateNextButton();
     };
 
-    // Функция для перехода к следующему шагу
+    // Функция для форматирования текста
+    window.formatText = function(command, value = null) {
+      if (!currentEditingBlock) return;
+
+      currentEditingBlock.focus();
+      document.execCommand(command, false, value);
+
+      // После форматирования пересчитываем высоту
+      autoResizeTextBlock(currentEditingBlock);
+      handleLongWords(currentEditingBlock);
+    };
+
+    // Установка текущего редактируемого блока
+    window.setCurrentBlock = function(element) {
+      currentEditingBlock = element;
+    };
+
+    // Применение глобального шрифта
+    window.applyGlobalFontFamily = function() {
+      globalFontFamily = document.getElementById('globalFontFamily').value;
+      const editors = document.querySelectorAll('.rich-text-editor');
+      editors.forEach(editor => {
+        editor.style.fontFamily = globalFontFamily;
+        autoResizeTextBlock(editor);
+      });
+    };
+
+    // Применение глобального размера шрифта
+    window.applyGlobalFontSize = function() {
+      globalFontSize = document.getElementById('globalFontSize').value;
+      const editors = document.querySelectorAll('.rich-text-editor');
+      editors.forEach(editor => {
+        editor.style.fontSize = globalFontSize;
+        autoResizeTextBlock(editor);
+      });
+    };
+
     window.goToNextStep = async function() {
       const blocks = getEditorContent();
-      const nonEmptyBlocks = blocks.filter(block => block.content !== '');
 
-      if (nonEmptyBlocks.length === 0) {
-        alert('Добавьте хотя бы один блок с содержимым!');
+      // Убираем строгую валидацию - разрешаем пустые текстовые блоки
+      // и медиа-блоки без файлов (только с путями)
+      const validBlocks = blocks.filter(block => {
+        if (block.type === 'text') {
+          // Разрешаем пустые текстовые блоки
+          return true;
+        } else if (block.type === 'media') {
+          // Разрешаем медиа-блоки с путем к файлу или без него
+          return true;
+        }
+        return false;
+      });
+
+      if (validBlocks.length === 0) {
+        alert('Добавьте хотя бы один блок!');
         return;
       }
 
       // Показываем индикатор загрузки
       nextBtn.disabled = true;
-      nextBtn.textContent = 'Загрузка файлов...';
+      nextBtn.textContent = 'Подготовка данных...';
       document.body.classList.add('loading');
 
       try {
-        // Обрабатываем медиа-файлы
-        const processedBlocks = await processMediaFiles(nonEmptyBlocks);
+        // Обрабатываем медиа-файлы (только те, что есть)
+        const processedBlocks = await processMediaFiles(validBlocks);
 
         // Сохраняем блоки в sessionStorage для передачи на следующий шаг
         sessionStorage.setItem('articleBlocks', JSON.stringify(processedBlocks));
@@ -373,14 +634,13 @@
         window.location.href = '/articles/create-form';
       } catch (error) {
         console.error('Error processing files:', error);
-        alert('Ошибка при загрузке файлов: ' + error.message);
+        alert('Ошибка при обработке данных: ' + error.message);
         nextBtn.disabled = false;
         nextBtn.textContent = 'Далее →';
         document.body.classList.remove('loading');
       }
     };
 
-    // Функция для обработки медиа-файлов
     async function processMediaFiles(blocks) {
       const processedBlocks = [];
 
@@ -400,9 +660,13 @@
           } catch (error) {
             console.error('Error uploading file:', error);
             // Если загрузка не удалась, сохраняем оригинальное имя файла
+            // или путь, если он был указан
+            const pathInput = document.querySelector('input[type="text"]');
+            const filePath = pathInput ? pathInput.value.trim() : block.file.name;
+
             processedBlocks.push({
               type: block.type,
-              content: block.file.name,
+              content: filePath,
               order: block.order
             });
           }
@@ -410,7 +674,7 @@
           // Для текстовых блоков или медиа с путем просто копируем
           processedBlocks.push({
             type: block.type,
-            content: block.content,
+            content: block.content || '', // Разрешаем пустой контент
             order: block.order
           });
         }
@@ -455,8 +719,8 @@
 
     function updateNextButton() {
       const blocks = getEditorContent();
-      const hasContent = blocks.some(block => block.content !== '');
-      nextBtn.disabled = !hasContent;
+      const hasBlocks = blocks.length > 0; // Теперь достаточно просто наличия блоков
+      nextBtn.disabled = !hasBlocks;
     }
 
     window.removeBlock = function(button) {
@@ -491,11 +755,11 @@
 
     window.clearAllBlocks = function() {
       editor.innerHTML = `
-                <div class="empty-state">
-                    <h3>Начните создавать статью</h3>
-                    <p>Добавьте текстовые блоки или медиафайлы используя кнопки выше</p>
-                </div>
-            `;
+        <div class="empty-state">
+          <h3>Начните создавать статью</h3>
+          <p>Добавьте текстовые блоки или медиафайлы используя кнопки выше</p>
+        </div>
+      `;
       updateNextButton();
     };
 

@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.postread.security.User;
+
 @Data
 @Entity
 @Table(name = "articles")

@@ -1,4 +1,4 @@
-package com.postread.data;
+package com.postread.security;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

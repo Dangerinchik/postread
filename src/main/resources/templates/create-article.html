@@ -103,22 +103,66 @@
 
         .preview-block {
             margin-bottom: 20px;
-            padding: 15px;
             background: white;
             border: 1px solid #e9ecef;
             border-radius: 6px;
+            /* Автоматическая высота */
+            height: auto;
         }
 
         .text-preview {
+            padding: 20px;
             line-height: 1.6;
-            white-space: pre-wrap;
+            /* Автоматическая высота */
+            height: auto;
+            /* Обработка длинных слов */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            width: 100%;
+        }
+
+        .text-preview p {
+            margin-bottom: 1em;
+            word-wrap: break-word;
+        }
+
+        .text-preview b,
+        .text-preview strong {
+            font-weight: bold;
+        }
+
+        .text-preview i,
+        .text-preview em {
+            font-style: italic;
+        }
+
+        .text-preview u {
+            text-decoration: underline;
+        }
+
+        .text-preview center {
+            text-align: center;
+            display: block;
+        }
+
+        .text-preview right {
+            text-align: right;
+            display: block;
+        }
+
+        .text-preview justify {
+            text-align: justify;
+            display: block;
         }
 
         .media-preview {
             text-align: center;
-            padding: 10px;
+            padding: 20px;
             background-color: #e9ecef;
             border-radius: 4px;
+            /* Автоматическая высота */
+            height: auto;
         }
 
         .media-preview img,
@@ -126,14 +170,6 @@
             max-width: 100%;
             max-height: 300px;
             border-radius: 4px;
-        }
-
-        .block-type {
-            font-size: 0.8em;
-            color: #6c757d;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-weight: bold;
         }
 
         .button-group {
@@ -203,6 +239,70 @@
         .file-info h5 {
             margin-bottom: 5px;
             color: #0c5460;
+        }
+
+        /* Стили для форматированного текста в предпросмотре */
+        .formatted-preview {
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            width: 100%;
+            /* Автоматическая высота */
+            height: auto;
+        }
+
+        .formatted-preview p {
+            margin-bottom: 1em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .formatted-preview b,
+        .formatted-preview strong {
+            font-weight: bold;
+        }
+
+        .formatted-preview i,
+        .formatted-preview em {
+            font-style: italic;
+        }
+
+        .formatted-preview u {
+            text-decoration: underline;
+        }
+
+        .formatted-preview center {
+            text-align: center;
+            display: block;
+        }
+
+        .formatted-preview right {
+            text-align: right;
+            display: block;
+        }
+
+        .formatted-preview justify {
+            text-align: justify;
+            display: block;
+        }
+
+        /* Обработка очень длинных слов */
+        .formatted-preview {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .formatted-preview * {
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .empty-preview {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
@@ -290,7 +390,7 @@
         preview.innerHTML = '';
 
         if (blocks.length === 0) {
-            preview.innerHTML = '<p style="color: #6c757d; text-align: center;">Нет блоков для отображения</p>';
+            preview.innerHTML = '<div class="empty-preview">Нет блоков для отображения</div>';
             return;
         }
 
@@ -301,8 +401,7 @@
             let content = '';
             if (block.type === 'text') {
                 content = `
-                    <div class="block-type">📝 Текстовый блок</div>
-                    <div class="text-preview">${block.content}</div>
+                    <div class="text-preview formatted-preview">${block.content}</div>
                 `;
             } else if (block.type === 'media') {
                 // Для медиа-блоков показываем информацию о файле
@@ -312,7 +411,6 @@
 
                 if (isUploadedFile) {
                     content = `
-                        <div class="block-type">🖼️ Медиа блок (файл загружен)</div>
                         <div class="media-preview">
                             <strong>Файл:</strong> ${block.content}
                             <br><small style="color: #28a745;">✓ Файл успешно загружен на сервер</small>
@@ -320,7 +418,6 @@
                     `;
                 } else {
                     content = `
-                        <div class="block-type">🖼️ Медиа блок</div>
                         <div class="media-preview">
                             <strong>Файл:</strong> ${block.content}
                         </div>
@@ -331,6 +428,41 @@
             blockDiv.innerHTML = content;
             preview.appendChild(blockDiv);
         });
+
+        // Применяем автоматическую регулировку высоты для текстовых блоков
+        setTimeout(() => {
+            const textPreviews = preview.querySelectorAll('.text-preview');
+            textPreviews.forEach(preview => {
+                adjustPreviewHeight(preview);
+            });
+        }, 100);
+    }
+
+    // Функция для регулировки высоты текстовых блоков в предпросмотре
+    function adjustPreviewHeight(element) {
+        // Сбрасываем высоту
+        element.style.height = 'auto';
+
+        // Устанавливаем высоту равную scrollHeight
+        const newHeight = element.scrollHeight;
+        element.style.height = newHeight + 'px';
+
+        // Применяем обработку длинных слов
+        handleLongWordsInPreview(element);
+    }
+
+    // Функция для обработки длинных слов в предпросмотре
+    function handleLongWordsInPreview(element) {
+        const text = element.innerText || element.textContent;
+
+        // Проверяем есть ли очень длинные слова (более 30 символов)
+        const words = text.split(/\s+/);
+        const veryLongWords = words.filter(word => word.length > 30);
+
+        if (veryLongWords.length > 0) {
+            console.log('В предпросмотре обнаружены очень длинные слова:', veryLongWords);
+            // CSS уже обрабатывает это через word-break: break-word
+        }
     }
 
     function updateBlocksSummary(blocks) {
@@ -434,6 +566,14 @@
     function goBack() {
         window.location.href = '/articles/editor';
     }
+
+    // Функция для обработки изменений размера окна
+    window.addEventListener('resize', function() {
+        const textPreviews = document.querySelectorAll('.text-preview');
+        textPreviews.forEach(preview => {
+            adjustPreviewHeight(preview);
+        });
+    });
 </script>
 </body>
 </html>

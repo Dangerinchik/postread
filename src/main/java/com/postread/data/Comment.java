@@ -1,5 +1,6 @@
 package com.postread.data;
 
+import com.postread.security.User;
 import jakarta.persistence.*;
 import lombok.Data;
 

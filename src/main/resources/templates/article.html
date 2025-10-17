@@ -101,28 +101,25 @@
 
         .block {
             margin-bottom: 25px;
-            padding: 20px;
             border-radius: 8px;
         }
 
         .text-block {
             background-color: #f8f9fa;
             line-height: 1.6;
-            white-space: pre-wrap;
+            padding: 20px;
+            /* Автоматическая высота */
+            height: auto;
+            /* Обработка длинных слов */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .media-block {
             text-align: center;
             background-color: #e9ecef;
             padding: 30px;
-        }
-
-        .block-type {
-            font-size: 0.8em;
-            color: #6c757d;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            font-weight: bold;
         }
 
         .media-content-wrapper {
@@ -220,6 +217,63 @@
         .btn-secondary:hover {
             background-color: #545b62;
         }
+
+        .formatted-text {
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            width: 100%;
+            /* Автоматическая высота */
+            height: auto;
+        }
+
+        .formatted-text p {
+            margin-bottom: 1em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .formatted-text b,
+        .formatted-text strong {
+            font-weight: bold;
+        }
+
+        .formatted-text i,
+        .formatted-text em {
+            font-style: italic;
+        }
+
+        .formatted-text u {
+            text-decoration: underline;
+        }
+
+        .formatted-text center {
+            text-align: center;
+            display: block;
+        }
+
+        .formatted-text right {
+            text-align: right;
+            display: block;
+        }
+
+        .formatted-text justify {
+            text-align: justify;
+            display: block;
+        }
+
+        /* Обработка очень длинных слов */
+        .formatted-text {
+            overflow-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        .formatted-text * {
+            max-width: 100%;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
@@ -255,12 +309,10 @@
         <div th:each="block : ${article.blocks}"
              th:classappend="'block ' + ${block.type} + '-block'">
 
-            <div class="block-type" th:text="${block.type}">type</div>
-
             <div th:switch="${block.type}">
 
                 <div th:case="'text'" class="text-content">
-                    <pre th:text="${block.content}">Текст блока</pre>
+                    <div class="formatted-text" th:utext="${block.content}">Текст блока</div>
                 </div>
 
                 <!-- Медиа блок -->

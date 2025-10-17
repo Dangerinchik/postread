@@ -6,12 +6,15 @@ import com.postread.dto.ArticleBlockDTO;
 import com.postread.dto.ArticleResponse;
 import com.postread.dto.UserDTO;
 import com.postread.data.*;
+import com.postread.security.User;
 import com.postread.repositories.UserRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +28,11 @@ public class ArticleService {
 
     // Создание статьи с блоками
     public Article createArticle(String title, String shortDescription, List<BlockRequest> blocks, Long authorId) {
+        return createArticle(title, shortDescription, blocks, authorId, false);
+    }
+
+    // Создание статьи с блоками и статусом публикации
+    public Article createArticle(String title, String shortDescription, List<BlockRequest> blocks, Long authorId, Boolean isPublished) {
         User author = userRepository.findById(authorId)
                 .orElseGet(() -> {
                     User tempUser = new User();
@@ -38,18 +46,24 @@ public class ArticleService {
         article.setAuthor(author);
         article.setTitle(title);
         article.setShortDescription(shortDescription);
-        article.setPublished(false);
+        article.setPublished(isPublished != null ? isPublished : false);
+        article.setViewCount(0);
 
         Article savedArticle = articleRepository.save(article);
 
-        if (blocks != null) {
+        if (blocks != null && !blocks.isEmpty()) {
             for (int i = 0; i < blocks.size(); i++) {
                 BlockRequest blockRequest = blocks.get(i);
+
+                // Пропускаем невалидные медиа-блоки
+                if (shouldSkipBlock(blockRequest)) {
+                    continue;
+                }
 
                 ArticleBlock block = new ArticleBlock();
                 block.setArticle(savedArticle);
                 block.setType(blockRequest.getType());
-                block.setContent(blockRequest.getContent());
+                block.setContent(blockRequest.getContent() != null ? blockRequest.getContent().trim() : "");
                 block.setOrder(blockRequest.getOrder() != null ? blockRequest.getOrder() : i);
 
                 blockRepository.save(block);
@@ -57,6 +71,21 @@ public class ArticleService {
         }
 
         return savedArticle;
+    }
+
+    // Проверка, нужно ли пропускать блок
+    private boolean shouldSkipBlock(BlockRequest block) {
+        if (block == null || block.getType() == null) {
+            return true;
+        }
+
+        // Для медиа-блоков пропускаем если нет контента
+        if ("media".equals(block.getType())) {
+            return block.getContent() == null || block.getContent().trim().isEmpty();
+        }
+
+        // Для текстовых блоков всегда сохраняем (даже пустые)
+        return false;
     }
 
     // Получение статьи с блоками как Entity
@@ -123,6 +152,62 @@ public class ArticleService {
     // Получение всех статей
     public List<Article> getAllArticles() {
         return articleRepository.findAll();
+    }
+
+    // Увеличение счетчика просмотров
+    public void incrementViewCount(Long articleId) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Статья не найдена"));
+        article.setViewCount(article.getViewCount() + 1);
+        article.setUpdatedAt(LocalDateTime.now());
+        articleRepository.save(article);
+    }
+
+    // Обновление статьи
+    public Article updateArticle(Long id, String title, String shortDescription,
+                                 List<BlockRequest> blocks, Boolean isPublished) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Статья не найдена"));
+
+        article.setTitle(title);
+        article.setShortDescription(shortDescription);
+        article.setPublished(isPublished != null ? isPublished : false);
+        article.setUpdatedAt(LocalDateTime.now());
+
+        // Удаляем старые блоки
+        blockRepository.deleteByArticleId(id);
+
+        // Создаем новые блоки
+        if (blocks != null && !blocks.isEmpty()) {
+            List<ArticleBlock> newBlocks = new ArrayList<>();
+            for (BlockRequest blockRequest : blocks) {
+                // Пропускаем невалидные блоки
+                if (shouldSkipBlock(blockRequest)) {
+                    continue;
+                }
+
+                ArticleBlock block = new ArticleBlock();
+                block.setType(blockRequest.getType());
+                block.setContent(blockRequest.getContent() != null ? blockRequest.getContent().trim() : "");
+                block.setOrder(blockRequest.getOrder() != null ? blockRequest.getOrder() : 0);
+                block.setArticle(article);
+                newBlocks.add(block);
+            }
+
+            if (!newBlocks.isEmpty()) {
+                blockRepository.saveAll(newBlocks);
+                article.setBlocks(newBlocks);
+            }
+        }
+
+        return articleRepository.save(article);
+    }
+
+    // Удаление статьи
+    public void deleteArticle(Long id) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Статья не найдена"));
+        articleRepository.delete(article);
     }
 
     // DTO для запроса - должен совпадать с тем, что используется в контроллере

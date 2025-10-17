@@ -1,6 +1,5 @@
 package com.postread.dto;
 
-import com.postread.data.User;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;

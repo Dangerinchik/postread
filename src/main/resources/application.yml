@@ -25,3 +25,7 @@ spring:
 app:
   upload:
     dir: /uploads
+
+postread:
+  secret: drfghjk324567klfg
+  expirationMs: 60000
