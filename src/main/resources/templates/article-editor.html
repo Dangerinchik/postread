@@ -377,6 +377,24 @@
 </div>
 
 <script>
+  let currentUserId = null;
+
+  // Проверяем аутентификацию при загрузке редактора
+  fetch('/secured/user')
+          .then(response => {
+            if (!response.ok) {
+              window.location.href = '/auth/login';
+            }
+            return response.text();
+          })
+          .then(username => {
+            console.log('Authenticated as:', username);
+            // Можно также получить ID пользователя здесь если нужно
+          })
+          .catch(error => {
+            console.error('Auth check failed:', error);
+            window.location.href = '/auth/login';
+          });
   // Глобальные переменные для настроек текста
   let globalFontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
   let globalFontSize = "16px";

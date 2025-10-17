@@ -14,7 +14,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
         // Поиск по названию (оставляем как было)
         List<Article> findByTitleContainingIgnoreCase(String title);
-        List<Article> findByIsPublishedTrue();
+        List<Article> findByPublishedTrue();
 
         // Новые методы для работы с блоками
         @Query("SELECT a FROM Article a LEFT JOIN FETCH a.blocks WHERE a.id = :id")
@@ -23,4 +23,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
         List<Article> findByAuthorId(Long authorId);
 
         List<Article> findAll();
+
+        List<Article> findAllByPublishedTrueOrderByCreatedAtDesc();
+
+        List<Article> findByTitleContainingIgnoreCaseAndPublishedTrue(String title);
 }

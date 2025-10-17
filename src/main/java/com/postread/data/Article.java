@@ -33,7 +33,7 @@ public class Article {
     private String shortDescription;
 
     @Column(name = "is_published")
-    private boolean isPublished = false;
+    private boolean published = false;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

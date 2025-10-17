@@ -216,16 +216,18 @@
             }
 
             try {
-                const response = await fetch(`/api/articles/search?title=${encodeURIComponent(title)}`);
+                // ИСПРАВЛЕННЫЙ URL - используем правильный endpoint
+                const response = await fetch(`/articles/api/search?title=${encodeURIComponent(title)}`);
+
                 if (response.ok) {
                     const articles = await response.json();
                     displayResults(articles, title);
                 } else {
-                    showError('Ошибка при поиске статей');
+                    showError('Ошибка при поиске статей. Статус: ' + response.status);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showError('Ошибка при выполнении поиска');
+                showError('Ошибка при выполнении поиска: ' + error.message);
             }
         });
 
@@ -242,6 +244,13 @@
             articles.forEach(article => {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item';
+
+                // Проверяем наличие автора и других полей
+                const authorName = article.author ? article.author.name || article.author.username : 'Неизвестный автор';
+                const createdAt = article.createdAt ? new Date(article.createdAt).toLocaleDateString() : 'Дата неизвестна';
+                const viewCount = article.viewCount || 0;
+                const shortDescription = article.shortDescription || 'Описание отсутствует';
+
                 resultItem.innerHTML = `
                     <div class="result-title">
                         <a href="/articles/${article.id}" style="color: #3498db; text-decoration: none;">
@@ -249,12 +258,12 @@
                         </a>
                     </div>
                     <div class="result-meta">
-                        Автор: ${article.author.username} |
-                        Дата: ${new Date(article.createdAt).toLocaleDateString()} |
-                        Просмотры: ${article.viewCount}
+                        Автор: ${authorName} |
+                        Дата: ${createdAt} |
+                        Просмотры: ${viewCount}
                     </div>
                     <div style="margin-top: 8px; font-size: 0.9em;">
-                        ${article.shortDescription}
+                        ${shortDescription}
                     </div>
                 `;
                 searchResults.appendChild(resultItem);
@@ -265,6 +274,7 @@
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
             successMessage.style.display = 'none';
+            searchResults.innerHTML = '';
         }
 
         function showSuccess(message) {

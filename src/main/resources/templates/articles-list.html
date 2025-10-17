@@ -37,6 +37,12 @@
             margin-bottom: 10px;
         }
 
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
         .actions {
             display: flex;
             gap: 15px;
@@ -65,11 +71,18 @@
         .btn-primary:hover {
             background-color: #2980b9;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
 
         .btn-secondary {
             background-color: #2c3e50;
             color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #1a252f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
         }
 
         .articles-grid {
@@ -85,6 +98,9 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 25px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
         .article-card:hover {
@@ -99,6 +115,16 @@
             line-height: 1.3;
         }
 
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .article-title a:hover {
+            color: #3498db;
+        }
+
         .article-meta {
             color: #6c757d;
             font-size: 0.9em;
@@ -106,12 +132,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .article-description {
             color: #495057;
             line-height: 1.5;
             margin-bottom: 15px;
+            flex-grow: 1;
         }
 
         .article-stats {
@@ -127,13 +156,19 @@
             text-decoration: none;
             font-weight: 600;
             display: inline-block;
-            margin-top: 10px;
+            margin-top: auto;
+            padding: 8px 0;
+            transition: color 0.2s;
+        }
+
+        .read-more:hover {
+            color: #2980b9;
         }
 
         .status-badge {
-            padding: 4px 8px;
+            padding: 4px 12px;
             border-radius: 12px;
-            font-size: 0.7em;
+            font-size: 0.75em;
             font-weight: 600;
         }
 
@@ -152,6 +187,44 @@
             padding: 60px 20px;
             color: #6c757d;
             grid-column: 1 / -1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .articles-count {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .articles-count strong {
+            color: #3498db;
+        }
+
+        .author-avatar-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.7em;
+            margin-right: 8px;
+        }
+
+        .author-with-avatar {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
@@ -159,18 +232,23 @@
 <div class="container">
     <header>
         <h1>📚 Все статьи</h1>
-        <p>Читайте и создавайте интересные статьи</p>
+        <p class="subtitle">Читайте и создавайте интересные статьи</p>
 
         <div class="actions">
             <a href="/articles/editor" class="btn btn-primary">✏️ Создать новую статью</a>
             <a href="/articles/search" class="btn btn-secondary">🔍 Поиск статей</a>
+            <a href="/" class="btn btn-secondary">🏠 На главную</a>
         </div>
     </header>
+
+    <div class="articles-count" th:if="${not #lists.isEmpty(articles)}">
+        Найдено статей: <strong th:text="${#lists.size(articles)}">0</strong>
+    </div>
 
     <div class="articles-grid">
         <div th:if="${#lists.isEmpty(articles)}" class="empty-state">
             <h3>Статьи не найдены</h3>
-            <p>Будьте первым, кто создаст статью!</p>
+            <p>Пока нет опубликованных статей. Будьте первым, кто создаст статью!</p>
             <a href="/articles/editor" class="btn btn-primary" style="margin-top: 15px;">
                 ✏️ Создать первую статью
             </a>
@@ -179,19 +257,22 @@
         <div th:each="article : ${articles}" class="article-card">
             <h3 class="article-title">
                 <a th:href="@{/articles/{id}(id=${article.id})}"
-                   style="color: inherit; text-decoration: none;"
                    th:text="${article.title}">
                     Название статьи
                 </a>
             </h3>
 
             <div class="article-meta">
-                <span th:text="${article.author.username}">Автор</span>
+                <div class="author-with-avatar">
+                    <div class="author-avatar-small"
+                         th:text="${#strings.substring(article.author.name, 0, 1)}">А</div>
+                    <span th:text="${article.author.name}">Автор</span>
+                </div>
                 <span class="status-badge"
                       th:classappend="${article.published} ? 'status-published' : 'status-draft'"
                       th:text="${article.published} ? 'Опубликовано' : 'Черновик'">
-                        Статус
-                    </span>
+                    Статус
+                </span>
             </div>
 
             <div class="article-description" th:text="${article.shortDescription}">
@@ -204,7 +285,7 @@
             </div>
 
             <a th:href="@{/articles/{id}(id=${article.id})}" class="read-more">
-                Читать далее →
+                Читать статью →
             </a>
         </div>
     </div>
