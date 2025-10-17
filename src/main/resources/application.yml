@@ -10,9 +10,18 @@ spring:
       ddl-auto: none
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
     clean-disabled: false
     validate-on-migrate: true
+
+app:
+  upload:
+    dir: /uploads

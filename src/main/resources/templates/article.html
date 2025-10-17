@@ -95,33 +95,60 @@
             font-style: italic;
         }
 
-        .article-content {
-            font-size: 1.1em;
-            line-height: 1.8;
+        .article-blocks {
+            margin-top: 30px;
         }
 
-        .article-content h1, .article-content h2, .article-content h3 {
-            margin: 25px 0 15px 0;
-            color: #2c3e50;
+        .block {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 8px;
         }
 
-        .article-content p {
-            margin-bottom: 20px;
+        .text-block {
+            background-color: #f8f9fa;
+            line-height: 1.6;
+            white-space: pre-wrap;
         }
 
-        .article-content img {
+        .media-block {
+            text-align: center;
+            background-color: #e9ecef;
+            padding: 30px;
+        }
+
+        .block-type {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .media-content-wrapper {
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .media-content-wrapper img {
             max-width: 100%;
             height: auto;
             border-radius: 6px;
-            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .article-content blockquote {
-            border-left: 4px solid #3498db;
-            padding-left: 20px;
-            margin: 20px 0;
+        .media-content-wrapper video {
+            max-width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .media-caption {
+            text-align: center;
             font-style: italic;
             color: #6c757d;
+            margin-top: 10px;
+            font-size: 0.9em;
         }
 
         .stats {
@@ -153,6 +180,7 @@
             margin-top: 20px;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -163,6 +191,7 @@
             font-size: 0.9em;
             cursor: pointer;
             transition: background-color 0.2s;
+            display: inline-block;
         }
 
         .btn-edit {
@@ -181,6 +210,15 @@
 
         .btn-delete:hover {
             background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
         }
     </style>
 </head>
@@ -212,8 +250,70 @@
         Краткое описание статьи...
     </div>
 
-    <div class="article-content" th:utext="${article.text}">
-        Содержимое статьи...
+    <!-- Отображаем блоки статьи -->
+    <div class="article-blocks">
+        <div th:each="block : ${article.blocks}"
+             th:classappend="'block ' + ${block.type} + '-block'">
+
+            <div class="block-type" th:text="${block.type}">type</div>
+
+            <div th:switch="${block.type}">
+
+                <div th:case="'text'" class="text-content">
+                    <pre th:text="${block.content}">Текст блока</pre>
+                </div>
+
+                <!-- Медиа блок -->
+                <div th:case="'media'" class="media-content-wrapper">
+                    <div th:if="${#strings.endsWith(block.content, '.jpg') or
+                 #strings.endsWith(block.content, '.jpeg') or
+                 #strings.endsWith(block.content, '.png') or
+                 #strings.endsWith(block.content, '.gif') or
+                 #strings.endsWith(block.content, '.svg') or
+                 #strings.endsWith(block.content, '.webp')}">
+                        <img th:src="@{'/uploads/' + ${block.content}}"
+                             th:alt="${block.content}"
+                             style="max-width: 100%; height: auto;">
+                    </div>
+                    <div th:if="${#strings.endsWith(block.content, '.mp4') or
+                 #strings.endsWith(block.content, '.webm') or
+                 #strings.endsWith(block.content, '.ogg') or
+                 #strings.endsWith(block.content, '.mov')}">
+                        <video th:src="@{'/uploads/' + ${block.content}}"
+                               controls
+                               style="max-width: 100%; height: auto;">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    </div>
+                    <div th:if="${#strings.endsWith(block.content, '.mp3') or
+                 #strings.endsWith(block.content, '.wav') or
+                 #strings.endsWith(block.content, '.ogg')}">
+                        <audio th:src="@{'/uploads/' + ${block.content}}"
+                               controls
+                               style="width: 100%;">
+                            Ваш браузер не поддерживает аудио.
+                        </audio>
+                    </div>
+                    <div th:if="${not (#strings.endsWith(block.content, '.jpg') or
+                      #strings.endsWith(block.content, '.jpeg') or
+                      #strings.endsWith(block.content, '.png') or
+                      #strings.endsWith(block.content, '.gif') or
+                      #strings.endsWith(block.content, '.svg') or
+                      #strings.endsWith(block.content, '.webp') or
+                      #strings.endsWith(block.content, '.mp4') or
+                      #strings.endsWith(block.content, '.webm') or
+                      #strings.endsWith(block.content, '.ogg') or
+                      #strings.endsWith(block.content, '.mov') or
+                      #strings.endsWith(block.content, '.mp3') or
+                      #strings.endsWith(block.content, '.wav'))}">
+                        <div class="media-caption">
+                            <strong>Файл:</strong> <span th:text="${block.content}">Путь к файлу</span>
+                            <br><small>Неизвестный тип файла</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="stats">
@@ -228,6 +328,7 @@
     </div>
 
     <div class="actions">
+        <a th:href="@{/articles/search}" class="btn btn-secondary">🔍 Поиск другой статьи</a>
         <a th:href="@{/articles}" class="back-link">← Назад к списку статей</a>
         <a th:href="@{'/articles/edit/' + ${article.id}}" class="btn btn-edit">✏️ Редактировать</a>
         <a th:href="@{'/articles/delete/' + ${article.id}}" class="btn btn-delete">🗑️ Удалить</a>

@@ -23,4 +23,13 @@ public class Multimedia {
 
     @Column(name = "url", length = 255)
     private String url;
+
+    @Column(name="file_name")
+    private String fileName;
+
+    @Column(name="file_type")
+    private String fileType;
+
+    @Column(name="position_in_text")
+    private Integer positionInText;
 }

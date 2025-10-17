@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание статьи</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .preview-section h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .preview-content {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .preview-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }
+
+        .text-preview {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .media-preview {
+            text-align: center;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+
+        .media-preview img,
+        .media-preview video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+        }
+
+        .block-type {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .blocks-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .blocks-info h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .file-info {
+            background-color: #d1ecf1;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .file-info h5 {
+            margin-bottom: 5px;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Создание статьи</h1>
+
+    <form id="articleForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Заголовок статьи *</label>
+            <input type="text" id="title" name="title"
+                   placeholder="Введите заголовок статьи" required maxlength="255">
+            <div class="char-count"><span id="titleCount">0</span>/255</div>
+        </div>
+
+        <div class="form-group">
+            <label for="shortDescription">Краткое описание *</label>
+            <textarea id="shortDescription" name="shortDescription"
+                      placeholder="Введите краткое описание статьи (максимум 500 символов)"
+                      required maxlength="500"></textarea>
+            <div class="char-count"><span id="descCount">0</span>/500</div>
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="isPublished" name="isPublished">
+                <label for="isPublished">Опубликовать статью сразу</label>
+            </div>
+        </div>
+
+        <div class="blocks-info">
+            <h4>📋 Информация о блоках</h4>
+            <div id="blocksSummary">Загрузка информации о блоках...</div>
+        </div>
+
+        <div class="file-info">
+            <h5>📎 Информация о файлах</h5>
+            <div id="filesInfo">Файлы уже загружены и готовы к сохранению</div>
+        </div>
+
+        <div class="preview-section">
+            <h3>Предпросмотр статьи</h3>
+            <div id="contentPreview" class="preview-content">
+                <!-- Блоки будут добавлены через JavaScript -->
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" class="btn btn-secondary" onclick="goBack()">← Назад к редактору</button>
+            <button type="button" class="btn btn-primary" onclick="saveArticle()">💾 Сохранить статью</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Загружаем блоки из sessionStorage
+        const blocksJson = sessionStorage.getItem('articleBlocks');
+        if (blocksJson) {
+            const blocks = JSON.parse(blocksJson);
+            displayPreview(blocks);
+            updateBlocksSummary(blocks);
+            updateFilesInfo(blocks);
+        } else {
+            alert('Нет данных о блоках статьи. Вернитесь в редактор.');
+            goBack();
+        }
+
+        // Обработчики для полей формы
+        document.getElementById('title').addEventListener('input', function() {
+            document.getElementById('titleCount').textContent = this.value.length;
+        });
+
+        document.getElementById('shortDescription').addEventListener('input', function() {
+            document.getElementById('descCount').textContent = this.value.length;
+        });
+
+        // Инициализация счетчиков
+        document.getElementById('titleCount').textContent = document.getElementById('title').value.length;
+        document.getElementById('descCount').textContent = document.getElementById('shortDescription').value.length;
+    });
+
+    function displayPreview(blocks) {
+        const preview = document.getElementById('contentPreview');
+        preview.innerHTML = '';
+
+        if (blocks.length === 0) {
+            preview.innerHTML = '<p style="color: #6c757d; text-align: center;">Нет блоков для отображения</p>';
+            return;
+        }
+
+        blocks.forEach((block, index) => {
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'preview-block';
+
+            let content = '';
+            if (block.type === 'text') {
+                content = `
+                    <div class="block-type">📝 Текстовый блок</div>
+                    <div class="text-preview">${block.content}</div>
+                `;
+            } else if (block.type === 'media') {
+                // Для медиа-блоков показываем информацию о файле
+                const isUploadedFile = block.content &&
+                    (block.content.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov|mp3|wav)$/i) ||
+                        block.content.length === 36 + 4); // UUID + extension
+
+                if (isUploadedFile) {
+                    content = `
+                        <div class="block-type">🖼️ Медиа блок (файл загружен)</div>
+                        <div class="media-preview">
+                            <strong>Файл:</strong> ${block.content}
+                            <br><small style="color: #28a745;">✓ Файл успешно загружен на сервер</small>
+                        </div>
+                    `;
+                } else {
+                    content = `
+                        <div class="block-type">🖼️ Медиа блок</div>
+                        <div class="media-preview">
+                            <strong>Файл:</strong> ${block.content}
+                        </div>
+                    `;
+                }
+            }
+
+            blockDiv.innerHTML = content;
+            preview.appendChild(blockDiv);
+        });
+    }
+
+    function updateBlocksSummary(blocks) {
+        const summary = document.getElementById('blocksSummary');
+        const textBlocks = blocks.filter(block => block.type === 'text').length;
+        const mediaBlocks = blocks.filter(block => block.type === 'media').length;
+
+        summary.innerHTML = `
+            Всего блоков: <strong>${blocks.length}</strong><br>
+            Текстовых блоков: <strong>${textBlocks}</strong><br>
+            Медиа блоков: <strong>${mediaBlocks}</strong>
+        `;
+    }
+
+    function updateFilesInfo(blocks) {
+        const filesInfo = document.getElementById('filesInfo');
+        const mediaBlocks = blocks.filter(block => block.type === 'media');
+        const uploadedFiles = mediaBlocks.filter(block =>
+            block.content &&
+            (block.content.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov|mp3|wav)$/i) ||
+                block.content.length === 36 + 4) // UUID + extension
+        );
+
+        if (mediaBlocks.length === 0) {
+            filesInfo.innerHTML = 'Медиа-файлы не добавлены';
+        } else if (uploadedFiles.length === mediaBlocks.length) {
+            filesInfo.innerHTML = `
+                Все файлы загружены: <strong>${uploadedFiles.length}</strong> из <strong>${mediaBlocks.length}</strong>
+                <br><small style="color: #28a745;">✓ Все файлы успешно загружены на сервер</small>
+            `;
+        } else {
+            filesInfo.innerHTML = `
+                Загружено файлов: <strong>${uploadedFiles.length}</strong> из <strong>${mediaBlocks.length}</strong>
+                <br><small style="color: #dc3545;">⚠ Некоторые файлы могут не отображаться корректно</small>
+            `;
+        }
+    }
+
+    async function saveArticle() {
+        const title = document.getElementById('title').value;
+        const shortDescription = document.getElementById('shortDescription').value;
+        const isPublished = document.getElementById('isPublished').checked;
+
+        // Валидация формы
+        if (!title.trim()) {
+            alert('Введите заголовок статьи');
+            return;
+        }
+
+        if (!shortDescription.trim()) {
+            alert('Введите краткое описание статьи');
+            return;
+        }
+
+        // Получаем блоки из sessionStorage (они уже должны быть обработаны)
+        const blocksJson = sessionStorage.getItem('articleBlocks');
+        if (!blocksJson) {
+            alert('Нет данных о блоках статьи');
+            return;
+        }
+
+        const blocks = JSON.parse(blocksJson);
+
+        // Показываем индикатор загрузки
+        const saveBtn = document.querySelector('.btn-primary');
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Сохранение...';
+        saveBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('shortDescription', shortDescription);
+        formData.append('isPublished', isPublished);
+        formData.append('blocks', JSON.stringify(blocks));
+
+        try {
+            const response = await fetch('/api/articles', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const article = await response.json();
+                alert('Статья успешно сохранена!');
+                sessionStorage.removeItem('articleBlocks');
+                window.location.href = '/articles/' + article.id;
+            } else {
+                const error = await response.text();
+                alert('Ошибка при сохранении статьи: ' + error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при сохранении статьи: ' + error.message);
+        } finally {
+            // Восстанавливаем кнопку
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+
+    function goBack() {
+        window.location.href = '/articles/editor';
+    }
+</script>
+</body>
+</html>
