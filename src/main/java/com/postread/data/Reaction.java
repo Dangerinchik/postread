@@ -31,5 +31,5 @@ public class Reaction {
     private Article article;
 
     @Column(name = "type")
-    private Integer type; // 1-8 как в БД check constraint
+    private Integer type; // 1-12 как в БД check constraint
 }

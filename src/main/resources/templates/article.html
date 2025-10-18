@@ -58,15 +58,34 @@
         }
 
         .author-avatar {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background-color: #3498db;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
+            font-size: 1.2em;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .author-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .author-date {
+            font-size: 0.85em;
+            color: #6c757d;
         }
 
         .status-badge {
@@ -110,9 +129,7 @@
             background-color: #f8f9fa;
             line-height: 1.6;
             padding: 25px;
-            /* Автоматическая высота */
             height: auto;
-            /* Обработка длинных слов */
             word-wrap: break-word;
             overflow-wrap: break-word;
             word-break: break-word;
@@ -229,7 +246,6 @@
             overflow-wrap: break-word;
             word-break: break-word;
             width: 100%;
-            /* Автоматическая высота */
             height: auto;
             font-size: 1.1em;
         }
@@ -269,7 +285,6 @@
             display: block;
         }
 
-        /* Обработка очень длинных слов */
         .formatted-text {
             overflow-wrap: break-word;
             word-break: break-word;
@@ -281,7 +296,6 @@
             word-wrap: break-word;
         }
 
-        /* Стили для списков */
         .formatted-text ul,
         .formatted-text ol {
             margin: 1em 0;
@@ -292,7 +306,6 @@
             margin-bottom: 0.5em;
         }
 
-        /* Стили для цитат */
         .formatted-text blockquote {
             border-left: 4px solid #3498db;
             padding-left: 1em;
@@ -318,6 +331,112 @@
             text-align: center;
             margin: 10px 0;
         }
+
+        .reactions-section {
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .reactions-section h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.4em;
+        }
+
+        .reactions-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .reaction-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            border: 1px solid #dee2e6;
+            font-size: 0.9em;
+        }
+
+        .reaction-stat-count {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .reactions-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .reaction-btn {
+            font-size: 1.5em;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .reaction-btn:hover {
+            border-color: #3498db;
+            transform: scale(1.1);
+            background-color: #f8f9fa;
+        }
+
+        .reaction-btn.active {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+            transform: scale(1.1);
+        }
+
+        .reaction-btn::after {
+            content: attr(title);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .reaction-btn:hover::after {
+            opacity: 1;
+        }
+
+        .btn-remove-reaction {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .btn-remove-reaction:hover {
+            background-color: #545b62;
+        }
     </style>
 </head>
 <body>
@@ -327,10 +446,15 @@
 
         <div class="article-meta">
             <div class="author-info">
-                <div class="author-avatar" th:text="${#strings.substring(article.author.name, 0, 1)}">А</div>
-                <div>
-                    <div th:text="${article.author.name}">Автор</div>
-                    <div th:text="${#temporals.format(article.createdAt, 'dd.MM.yyyy HH:mm')}">Дата публикации</div>
+                <div class="author-avatar"
+                     th:style="${article.author.icon != null && !article.author.icon.isEmpty()} ?
+                               'background-image: url(' + ${article.author.icon} + ')' : ''"
+                     th:text="${(article.author.icon == null || article.author.icon.isEmpty()) ?
+                              #strings.substring(article.author.name, 0, 1) : ''}">
+                </div>
+                <div class="author-details">
+                    <div class="author-name" th:text="${article.author.name}">Автор</div>
+                    <div class="author-date" th:text="${#temporals.format(article.createdAt, 'dd.MM.yyyy HH:mm')}">Дата публикации</div>
                 </div>
             </div>
 
@@ -346,6 +470,16 @@
 
     <div class="short-description" th:text="${article.shortDescription}">
         Краткое описание статьи...
+    </div>
+
+    <!-- Добавляем после краткого описания -->
+    <div class="article-tags" th:if="${article.hasTags()}">
+        <th:block th:each="tag : ${article.tags}">
+            <a th:href="@{/articles/search-advanced(tags=${tag.name})}"
+               class="article-tag" th:text="'#' + ${tag.name}">
+                #тег
+            </a>
+        </th:block>
     </div>
 
     <!-- Отображаем блоки статьи -->
@@ -440,6 +574,35 @@
         </div>
     </div>
 
+    <div class="reactions-section">
+        <h3>Реакции</h3>
+
+        <div class="reactions-stats" id="reactionsStats">
+            <!-- Статистика будет загружена через JavaScript -->
+        </div>
+
+        <div class="reactions-actions">
+            <p>Ваша реакция:</p>
+            <div class="reactions-buttons">
+                <button class="reaction-btn" data-emoji="👍" title="Нравится">👍</button>
+                <button class="reaction-btn" data-emoji="👎" title="Не нравится">👎</button>
+                <button class="reaction-btn" data-emoji="❤️" title="Люблю">❤️</button>
+                <button class="reaction-btn" data-emoji="😂" title="Смешно">😂</button>
+                <button class="reaction-btn" data-emoji="😢" title="Грустно">😢</button>
+                <button class="reaction-btn" data-emoji="😠" title="Злюсь">😠</button>
+                <button class="reaction-btn" data-emoji="😮" title="Удивительно">😮</button>
+                <button class="reaction-btn" data-emoji="🔥" title="Огонь!">🔥</button>
+                <button class="reaction-btn" data-emoji="🤔" title="Заставляет задуматься">🤔</button>
+                <button class="reaction-btn" data-emoji="👏" title="Аплодирую">👏</button>
+                <button class="reaction-btn" data-emoji="😕" title="Не понял">😕</button>
+                <button class="reaction-btn" data-emoji="🎉" title="Праздную">🎉</button>
+            </div>
+            <button class="btn-remove-reaction" id="removeReactionBtn" style="display: none;">
+                ❌ Убрать реакцию
+            </button>
+        </div>
+    </div>
+
     <div class="actions">
         <a th:href="@{/articles/search}" class="btn btn-secondary">🔍 Поиск другой статьи</a>
         <a th:href="@{/articles}" class="btn btn-secondary">📚 Все статьи</a>
@@ -455,8 +618,202 @@
         mediaElements.forEach(element => {
             element.addEventListener('error', function() {
                 console.log('Ошибка загрузки медиафайла:', this.src);
+                const errorDiv = this.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('file-not-found')) {
+                    errorDiv.style.display = 'block';
+                }
             });
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const articleId = [[${article.id}]];
+        const reactionsContainer = document.getElementById('reactionsStats');
+        const reactionButtons = document.querySelectorAll('.reaction-btn');
+        const removeReactionBtn = document.getElementById('removeReactionBtn');
+
+        let currentUserReaction = null;
+
+        // Маппинг эмодзи на коды реакций
+        const emojiToCode = {
+            '👍': 1, '👎': 2, '❤️': 3, '😂': 4,
+            '😢': 5, '😠': 6, '😮': 7, '🔥': 8,
+            '🤔': 9, '👏': 10, '😕': 11, '🎉': 12
+        };
+
+        // Маппинг кодов на эмодзи
+        const codeToEmoji = {
+            1: '👍', 2: '👎', 3: '❤️', 4: '😂',
+            5: '😢', 6: '😠', 7: '😮', 8: '🔥',
+            9: '🤔', 10: '👏', 11: '😕', 12: '🎉'
+        };
+
+        // Загружаем статистику реакций
+        function loadReactionStats() {
+            fetch(`/api/reactions/article/${articleId}/stats`, {
+                credentials: 'include' // Важно для отправки сессионных куки
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success !== false) {
+                        updateReactionsDisplay(data);
+                    } else {
+                        console.error('Ошибка загрузки статистики:', data.error);
+                        showReactionsError(data.error || 'Ошибка загрузки реакций');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки статистики реакций:', error);
+                    showReactionsError('Не удалось загрузить реакции');
+                });
+        }
+
+        function showReactionsError(message) {
+            reactionsContainer.innerHTML = `<p style="color: #dc3545;">${message}</p>`;
+        }
+
+        // Обновляем отображение статистики
+        function updateReactionsDisplay(data) {
+            const stats = data.stats;
+            currentUserReaction = data.userReaction;
+
+            // Обновляем статистику
+            let statsHTML = '';
+            if (stats && Object.keys(stats).length > 0) {
+                for (const [emoji, count] of Object.entries(stats)) {
+                    if (count > 0) {
+                        statsHTML += `
+                <div class="reaction-stat">
+                    <span class="reaction-emoji">${emoji}</span>
+                    <span class="reaction-stat-count">${count}</span>
+                </div>
+            `;
+                    }
+                }
+            }
+
+            if (statsHTML === '') {
+                statsHTML = '<p style="color: #6c757d; font-style: italic;">Пока нет реакций</p>';
+            }
+
+            reactionsContainer.innerHTML = statsHTML;
+
+            // Обновляем кнопки реакций
+            updateReactionButtons();
+        }
+
+        // Обновляем состояние кнопок реакций
+        function updateReactionButtons() {
+            reactionButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (currentUserReaction !== null) {
+                    const emoji = btn.getAttribute('data-emoji');
+                    const reactionCode = emojiToCode[emoji];
+                    if (reactionCode === currentUserReaction) {
+                        btn.classList.add('active');
+                        removeReactionBtn.style.display = 'block';
+                    }
+                }
+            });
+
+            if (currentUserReaction === null) {
+                removeReactionBtn.style.display = 'none';
+            }
+        }
+
+        // Обработчик клика по кнопке реакции
+        reactionButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const emoji = this.getAttribute('data-emoji');
+                setReaction(emoji);
+            });
+        });
+
+        // Обработчик удаления реакции
+        removeReactionBtn.addEventListener('click', function() {
+            removeReaction();
+        });
+
+        // Установить реакцию
+        function setReaction(emoji) {
+            // Показываем индикатор загрузки
+            const originalText = removeReactionBtn.textContent;
+            removeReactionBtn.textContent = '⏳...';
+            removeReactionBtn.disabled = true;
+
+            fetch(`/api/reactions/article/${articleId}?emoji=${encodeURIComponent(emoji)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                credentials: 'include' // Важно для отправки сессионных куки
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        updateReactionsDisplay(data);
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка установки реакции:', error);
+                    alert('Произошла ошибка при установке реакции: ' + error.message);
+                })
+                .finally(() => {
+                    // Восстанавливаем кнопку
+                    removeReactionBtn.textContent = originalText;
+                    removeReactionBtn.disabled = false;
+                });
+        }
+
+        // Удалить реакцию
+        function removeReaction() {
+            // Показываем индикатор загрузки
+            const originalText = removeReactionBtn.textContent;
+            removeReactionBtn.textContent = '⏳...';
+            removeReactionBtn.disabled = true;
+
+            fetch(`/api/reactions/article/${articleId}`, {
+                method: 'DELETE',
+                credentials: 'include' // Важно для отправки сессионных куки
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        updateReactionsDisplay(data);
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка удаления реакции:', error);
+                    alert('Произошла ошибка при удалении реакции: ' + error.message);
+                })
+                .finally(() => {
+                    // Восстанавливаем кнопку
+                    removeReactionBtn.textContent = '❌ Убрать реакцию';
+                    removeReactionBtn.disabled = false;
+                });
+        }
+
+        // Загружаем статистику при загрузке страницы
+        loadReactionStats();
     });
 </script>
 </body>

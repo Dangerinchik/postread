@@ -18,13 +18,19 @@ public class ArticleTag {
     @EmbeddedId
     private ArticleTagKey id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("articleId")
     @JoinColumn(name = "article_id")
     private Article article;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("tagId")
     @JoinColumn(name = "tag_id")
     private Tag tag;
+
+    public ArticleTag(Article article, Tag tag) {
+        this.article = article;
+        this.tag = tag;
+        this.id = new ArticleTagKey(article.getId(), tag.getId());
+    }
 }

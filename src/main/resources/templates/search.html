@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,22 +19,34 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 1200px;
             margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .search-form-container {
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 30px;
-        }
-
-        h1 {
-            text-align: center;
             margin-bottom: 30px;
-            color: #2c3e50;
         }
 
         .search-form {
-            margin-bottom: 30px;
+            margin-bottom: 0;
         }
 
         .form-group {
@@ -102,11 +114,207 @@
             margin-bottom: 20px;
         }
 
-        .navigation {
+        .success-message {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #bee5eb;
+            margin-bottom: 20px;
+        }
+
+        .search-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .results-count {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .search-params {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .tag-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            /*width: 100%;*/
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tag-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tag-suggestion:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-type-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-type-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .article-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .article-title {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .article-title a:hover {
+            color: #3498db;
+        }
+
+        .article-meta {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.7em;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .article-description {
+            color: #495057;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .article-stats {
+            display: flex;
+            gap: 15px;
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .article-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .article-tag:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .read-more {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: auto;
+            padding: 8px 0;
+            transition: color 0.2s;
+        }
+
+        .read-more:hover {
+            color: #2980b9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .actions {
             display: flex;
             gap: 15px;
             justify-content: center;
-            margin-top: 20px;
+            margin: 30px 0;
             flex-wrap: wrap;
         }
 
@@ -123,165 +331,237 @@
             margin-bottom: 10px;
             color: #495057;
         }
-
-        .success-message {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            padding: 12px;
-            border-radius: 4px;
-            border: 1px solid #bee5eb;
-            margin-bottom: 20px;
-        }
-
-        .search-results {
-            margin-top: 20px;
-        }
-
-        .result-item {
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            background-color: #f8f9fa;
-        }
-
-        .result-title {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .result-meta {
-            font-size: 0.9em;
-            color: #6c757d;
-        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>🔍 Поиск статьи</h1>
+    <header>
+        <h1>🔍 Поиск статьи</h1>
+        <p>Найдите интересующие вас статьи по названию или тегам</p>
+    </header>
 
-    <form class="search-form" id="searchForm">
-        <div class="form-group">
-            <label for="title">Название статьи:</label>
-            <input type="text" id="title" name="title"
-                   placeholder="Введите название статьи"
-                   required>
+    <div class="search-form-container">
+        <form class="search-form" id="searchForm" method="get">
+            <div class="form-group">
+                <label for="title">Название статьи:</label>
+                <input type="text" id="title" name="title"
+                       placeholder="Введите название статьи"
+                       th:value="${searchTitle}">
+            </div>
+
+            <div class="form-group">
+                <label for="searchTags">Теги:</label>
+                <input type="text" id="searchTags" name="tags"
+                       placeholder="Введите теги через запятую"
+                       th:value="${searchTags}">
+                <small style="color: #6c757d;">
+                    Найдены будут статьи, содержащие хотя бы один из указанных тегов
+                </small>
+                <div id="searchTagSuggestions" class="tag-suggestions"></div>
+            </div>
+
+<!--            <div class="form-group">-->
+<!--                <label>Тип поиска:</label>-->
+<!--                <div class="search-type-group">-->
+<!--                    <div class="search-type-option">-->
+<!--                        <input type="radio" id="searchTypeAll" name="searchType" value="all"-->
+<!--                               th:checked="${searchType == 'all'}">-->
+<!--                        <label for="searchTypeAll">По названию и тегам</label>-->
+<!--                    </div>-->
+<!--                    <div class="search-type-option">-->
+<!--                        <input type="radio" id="searchTypeTitle" name="searchType" value="title"-->
+<!--                               th:checked="${searchType == 'title'}">-->
+<!--                        <label for="searchTypeTitle">Только по названию</label>-->
+<!--                    </div>-->
+<!--                    <div class="search-type-option">-->
+<!--                        <input type="radio" id="searchTypeTags" name="searchType" value="tags"-->
+<!--                               th:checked="${searchType == 'tags'}">-->
+<!--                        <label for="searchTypeTags">Только по тегам</label>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+            <button type="submit" class="btn btn-primary">Найти статью</button>
+            <button type="button" class="btn btn-secondary" onclick="clearSearch()">Очистить</button>
+        </form>
+
+        <div class="search-example">
+            <h3>Как найти статью?</h3>
+            <p><strong>По названию:</strong> Введите часть названия статьи</p>
+            <p><strong>По тегам:</strong> Введите теги через запятую (например: java, spring)</p>
+            <p><strong>Комбинированный поиск:</strong> Используйте оба поля для точного поиска</p>
         </div>
-
-        <button type="submit" class="btn btn-primary">Найти статью</button>
-    </form>
-
-    <!-- Сообщение об ошибке -->
-    <div id="errorMessage" class="error-message" style="display: none;"></div>
-
-    <!-- Сообщение об успехе -->
-    <div id="successMessage" class="success-message" style="display: none;"></div>
-
-    <!-- Результаты поиска -->
-    <div id="searchResults" class="search-results"></div>
-
-    <div class="search-example">
-        <h3>Как найти статью?</h3>
-        <p>Введите название статьи в поле выше и нажмите "Найти статью".</p>
-        <p>Поиск работает по частичному совпадению названия.</p>
     </div>
 
-    <div class="navigation">
-        <a href="/articles/editor" class="btn btn-secondary">✏️ Создать новую статью</a>
+    <!-- Сообщение об ошибке -->
+    <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+    <!-- Информация о поиске -->
+    <div th:if="${hasSearchParams}" class="search-info">
+        <div class="results-count">
+            Найдено статей: <strong th:text="${resultsCount}">0</strong>
+        </div>
+        <div class="search-params">
+            <!-- Исправленные выражения для безопасной проверки null -->
+            <div th:if="${searchTitle != null and searchTitle.length() > 0}">
+                <strong>Название:</strong> <span th:text="${searchTitle}"></span>
+            </div>
+            <div th:if="${searchTags != null and searchTags.length() > 0}">
+                <strong>Теги:</strong> <span th:text="${searchTags}"></span>
+            </div>
+<!--            <div th:if="${searchType != null}">-->
+<!--                <strong>Тип поиска:</strong>-->
+<!--                <span th:if="${searchType == 'all'}">по названию и тегам</span>-->
+<!--                <span th:if="${searchType == 'title'}">только по названию</span>-->
+<!--                <span th:if="${searchType == 'tags'}">только по тегам</span>-->
+<!--            </div>-->
+        </div>
+    </div>
+
+    <!-- Результаты поиска -->
+    <div th:if="${hasSearchParams and resultsCount == 0}" class="empty-state">
+        <h3>Статьи не найдены</h3>
+        <p>Попробуйте изменить параметры поиска</p>
+    </div>
+
+    <div th:if="${resultsCount > 0}" class="articles-grid">
+        <div th:each="article : ${articles}" class="article-card">
+            <h3 class="article-title">
+                <a th:href="@{/articles/{id}(id=${article.id})}"
+                   th:text="${article.title}">
+                    Название статьи
+                </a>
+            </h3>
+
+            <div class="article-meta">
+                <div class="author-info">
+                    <div class="author-avatar-small"
+                         th:if="${article.author != null}"
+                         th:style="${article.author.icon != null and !article.author.icon.isEmpty()} ?
+                                  'background-image: url(' + ${article.author.icon} + ')' : ''"
+                         th:text="${(article.author.icon == null or article.author.icon.isEmpty()) ?
+                                  #strings.substring(article.author.name, 0, 1) : ''}">
+                    </div>
+                    <span th:if="${article.author != null}" th:text="${article.author.name}">Автор</span>
+                </div>
+            </div>
+
+            <div class="article-description" th:text="${article.shortDescription}">
+                Краткое описание статьи...
+            </div>
+
+            <div th:if="${article.hasTags()}" class="article-tags">
+                <th:block th:each="tag : ${article.tags}">
+                    <a th:href="@{/articles/search(tags=${tag.name}, searchType='tags')}"
+                       class="article-tag" th:text="'#' + ${tag.name}">
+                        #тег
+                    </a>
+                </th:block>
+            </div>
+
+            <div class="article-stats">
+                <span>👁️ <span th:text="${article.viewCount}">0</span> просмотров</span>
+                <span>📅 <span th:text="${#temporals.format(article.createdAt, 'dd.MM.yyyy')}">Дата</span></span>
+            </div>
+
+            <a th:href="@{/articles/{id}(id=${article.id})}" class="read-more">
+                Читать статью →
+            </a>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="/articles/editor" class="btn btn-primary">✏️ Создать новую статью</a>
         <a href="/articles" class="btn btn-secondary">📚 Все статьи</a>
+<!--        <a href="/articles/search-advanced" class="btn btn-secondary">🎛️ Расширенный поиск</a>-->
         <a href="/" class="btn btn-secondary">🏠 На главную</a>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const searchForm = document.getElementById('searchForm');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const searchResults = document.getElementById('searchResults');
+        const searchTagsInput = document.getElementById('searchTags');
 
-        const titleInput = document.getElementById('title');
-        if (titleInput) {
-            titleInput.focus();
-        }
-
-        searchForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const title = titleInput.value.trim();
-            if (!title) {
-                showError('Введите название статьи для поиска');
-                return;
-            }
-
-            try {
-                // ИСПРАВЛЕННЫЙ URL - используем правильный endpoint
-                const response = await fetch(`/articles/api/search?title=${encodeURIComponent(title)}`);
-
-                if (response.ok) {
-                    const articles = await response.json();
-                    displayResults(articles, title);
-                } else {
-                    showError('Ошибка при поиске статей. Статус: ' + response.status);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Ошибка при выполнении поиска: ' + error.message);
+        // Автодополнение тегов
+        searchTagsInput.addEventListener('input', function(e) {
+            const query = e.target.value;
+            if (query.length > 1) {
+                searchTagSuggestions(query);
+            } else {
+                clearTagSuggestions();
             }
         });
 
-        function displayResults(articles, searchTerm) {
-            searchResults.innerHTML = '';
+        // Обработка выбора тега из предложений
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tag-suggestion')) {
+                addTagToSearch(e.target.textContent);
+            }
+        });
 
-            if (articles.length === 0) {
-                showSuccess(`Статьи по запросу "${searchTerm}" не найдены`);
+        async function searchTagSuggestions(query) {
+            try {
+                const response = await fetch(`/articles/api/tags?query=${encodeURIComponent(query)}`);
+                if (response.ok) {
+                    const tags = await response.json();
+                    displayTagSuggestions(tags);
+                }
+            } catch (error) {
+                console.error('Error fetching tag suggestions:', error);
+            }
+        }
+
+        function displayTagSuggestions(tags) {
+            const suggestionsContainer = document.getElementById('searchTagSuggestions');
+            suggestionsContainer.innerHTML = '';
+
+            if (tags.length === 0) {
+                suggestionsContainer.style.display = 'none';
                 return;
             }
 
-            showSuccess(`Найдено статей: ${articles.length}`);
+            suggestionsContainer.style.display = 'block';
 
-            articles.forEach(article => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-
-                // Проверяем наличие автора и других полей
-                const authorName = article.author ? article.author.name || article.author.username : 'Неизвестный автор';
-                const createdAt = article.createdAt ? new Date(article.createdAt).toLocaleDateString() : 'Дата неизвестна';
-                const viewCount = article.viewCount || 0;
-                const shortDescription = article.shortDescription || 'Описание отсутствует';
-
-                resultItem.innerHTML = `
-                    <div class="result-title">
-                        <a href="/articles/${article.id}" style="color: #3498db; text-decoration: none;">
-                            ${article.title}
-                        </a>
-                    </div>
-                    <div class="result-meta">
-                        Автор: ${authorName} |
-                        Дата: ${createdAt} |
-                        Просмотры: ${viewCount}
-                    </div>
-                    <div style="margin-top: 8px; font-size: 0.9em;">
-                        ${shortDescription}
-                    </div>
-                `;
-                searchResults.appendChild(resultItem);
+            tags.forEach(tag => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'tag-suggestion';
+                suggestion.textContent = tag.name;
+                suggestionsContainer.appendChild(suggestion);
             });
         }
 
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-            searchResults.innerHTML = '';
+        function addTagToSearch(tagName) {
+            const currentTags = searchTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+            if (!currentTags.includes(tagName)) {
+                currentTags.push(tagName);
+                searchTagsInput.value = currentTags.join(', ');
+            }
+
+            clearTagSuggestions();
+            searchTagsInput.focus();
         }
 
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
+        function clearTagSuggestions() {
+            const suggestionsContainer = document.getElementById('searchTagSuggestions');
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none';
         }
+
+        // Закрываем подсказки при клике вне поля
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#searchTags') && !e.target.closest('.tag-suggestions')) {
+                clearTagSuggestions();
+            }
+        });
+
+        // Функция очистки поиска
+        window.clearSearch = function() {
+            document.getElementById('title').value = '';
+            document.getElementById('searchTags').value = '';
+            document.getElementById('searchTypeAll').checked = true;
+            window.location.href = '/articles/search';
+        };
     });
 </script>
 </body>

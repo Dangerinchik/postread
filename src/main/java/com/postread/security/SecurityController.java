@@ -91,10 +91,12 @@ public class SecurityController {
         session.setAttribute("username", username);
         session.setAttribute("token", jwt);
 
-        // Получаем ID пользователя
+        // Получаем ID пользователя и сохраняем полный объект User в сессии
         Optional<User> userOpt = userRepository.findByName(username);
         if (userOpt.isPresent()) {
-            session.setAttribute("userId", userOpt.get().getId());
+            User user = userOpt.get();
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("user", user); // Сохраняем полный объект User
         }
 
         modelAndView.setViewName("redirect:/articles");

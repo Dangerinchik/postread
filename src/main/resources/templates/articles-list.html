@@ -30,6 +30,7 @@
             background: linear-gradient(135deg, #3498db, #2c3e50);
             color: white;
             border-radius: 8px;
+            position: relative;
         }
 
         h1 {
@@ -85,6 +86,17 @@
             box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
         }
 
+        .btn-profile {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-profile:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
         .articles-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -134,6 +146,28 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.7em;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid #e9ecef;
         }
 
         .article-description {
@@ -208,35 +242,66 @@
             color: #3498db;
         }
 
-        .author-avatar-small {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background-color: #3498db;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 0.7em;
-            margin-right: 8px;
+        .user-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
         }
 
-        .author-with-avatar {
+        .user-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
+            gap: 5px;
+        }
+
+        .user-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .user-actions {
+                position: static;
+                justify-content: center;
+                margin-top: 15px;
+            }
+
+            header {
+                padding-bottom: 20px;
+            }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <header>
+        <!-- Кнопки пользователя в правом верхнем углу -->
+        <div class="user-actions">
+            <a th:href="@{/user/profile}" class="user-btn">
+                👤 Мой профиль
+            </a>
+            <a th:href="@{/logout}" class="user-btn">
+                🚪 Выйти
+            </a>
+        </div>
+
         <h1>📚 Все статьи</h1>
         <p class="subtitle">Читайте и создавайте интересные статьи</p>
 
         <div class="actions">
             <a href="/articles/editor" class="btn btn-primary">✏️ Создать новую статью</a>
             <a href="/articles/search" class="btn btn-secondary">🔍 Поиск статей</a>
+            <a href="/user/profile" class="btn btn-profile">👤 Личный кабинет</a>
             <a href="/" class="btn btn-secondary">🏠 На главную</a>
         </div>
     </header>
@@ -263,14 +328,18 @@
             </h3>
 
             <div class="article-meta">
-                <div class="author-with-avatar">
+                <div class="author-info">
                     <div class="author-avatar-small"
-                         th:text="${#strings.substring(article.author.name, 0, 1)}">А</div>
+                         th:style="${article.author.icon != null && !article.author.icon.isEmpty()} ?
+                                  'background-image: url(' + ${article.author.icon} + ')' : ''"
+                         th:text="${(article.author.icon == null || article.author.icon.isEmpty()) ?
+                                  #strings.substring(article.author.name, 0, 1) : ''}">
+                    </div>
                     <span th:text="${article.author.name}">Автор</span>
                 </div>
                 <span class="status-badge"
                       th:classappend="${article.published} ? 'status-published' : 'status-draft'"
-                      th:text="${article.published} ? 'Опубликовано' : 'Черновик'">
+                      th:text="${article.published ? 'Опубликовано' : 'Черновик'}">
                     Статус
                 </span>
             </div>

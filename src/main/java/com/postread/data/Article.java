@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.postread.security.User;
 
@@ -44,11 +46,23 @@ public class Article {
     @Column(name = "view_count")
     private int viewCount = 0;
 
-    // Добавляем связь с блоками
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("order ASC")
-    @JsonIgnore // Добавляем эту аннотацию чтобы избежать циклической зависимости
+    @JsonIgnore
     private List<ArticleBlock> blocks = new ArrayList<>();
+
+    // Простая связь ManyToMany с тегами - используем EAGER для избежания LazyInitializationException
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "articles_tags",
+            joinColumns = @JoinColumn(name = "article_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @JsonIgnore
+    private Set<Tag> tags = new HashSet<>();
+
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Reaction> reactions = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -59,5 +73,10 @@ public class Article {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Вспомогательный метод для проверки наличия тегов (без доступа к коллекции)
+    public boolean hasTags() {
+        return tags != null && !tags.isEmpty();
     }
 }

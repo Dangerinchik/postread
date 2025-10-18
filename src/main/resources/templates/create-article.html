@@ -315,6 +315,72 @@
             opacity: 0.6;
             pointer-events: none;
         }
+
+        /* Добавляем в create-article.css */
+        .tag-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tag-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tag-suggestion:hover {
+            background-color: #f8f9fa;
+        }
+
+        .tag-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .tags-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tag-preview {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            display: inline-block;
+        }
+
+        /* Стили для отображения тегов в статьях */
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .article-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .article-tag:hover {
+            background: #3498db;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -340,6 +406,24 @@
                       placeholder="Введите краткое описание статьи (максимум 500 символов)"
                       required maxlength="500"></textarea>
             <div class="char-count"><span id="descCount">0</span>/500</div>
+        </div>
+
+        <!-- Добавляем после поля краткого описания -->
+        <div class="form-group">
+            <label for="tags">Теги (максимум 3)</label>
+            <input type="text" id="tags" name="tags"
+                   placeholder="Введите теги через запятую или используйте #тег"
+                   maxlength="100">
+            <div class="char-count"><span id="tagsCount">0</span>/100</div>
+            <small style="color: #6c757d;">
+                Пример: #программирование, #java, #spring. Максимум 3 тега.
+            </small>
+            <div id="tagSuggestions" class="tag-suggestions"></div>
+        </div>
+
+        <!-- Добавляем в секцию предпросмотра -->
+        <div class="tags-preview" id="tagsPreview">
+            <!-- Теги будут отображаться здесь -->
         </div>
 
         <div class="form-group">
@@ -651,6 +735,201 @@
             adjustPreviewHeight(preview);
         });
     });
+
+    // Обработчик для поля тегов
+    document.getElementById('tags').addEventListener('input', function(e) {
+        const tagsText = e.target.value;
+        document.getElementById('tagsCount').textContent = tagsText.length;
+
+        // Автодополнение тегов
+        if (tagsText.length > 1) {
+            searchTagSuggestions(tagsText);
+        } else {
+            clearTagSuggestions();
+        }
+
+        // Обновляем предпросмотр тегов
+        updateTagsPreview(tagsText);
+    });
+
+    // Функция для поиска предложений тегов
+    async function searchTagSuggestions(query) {
+        try {
+            const response = await fetch(`/articles/api/tags?query=${encodeURIComponent(query)}`);
+            if (response.ok) {
+                const tags = await response.json();
+                displayTagSuggestions(tags);
+            }
+        } catch (error) {
+            console.error('Error fetching tag suggestions:', error);
+        }
+    }
+
+    // Функция для отображения предложений тегов
+    function displayTagSuggestions(tags) {
+        const suggestionsContainer = document.getElementById('tagSuggestions');
+        suggestionsContainer.innerHTML = '';
+
+        if (tags.length === 0) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+
+        suggestionsContainer.style.display = 'block';
+
+        tags.forEach(tag => {
+            const suggestion = document.createElement('div');
+            suggestion.className = 'tag-suggestion';
+            suggestion.textContent = `#${tag.name}`;
+            suggestion.onclick = () => {
+                addTagToInput(tag.name);
+            };
+            suggestionsContainer.appendChild(suggestion);
+        });
+    }
+
+    // Функция для добавления тега в поле ввода
+    function addTagToInput(tagName) {
+        const tagsInput = document.getElementById('tags');
+        const currentTags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+        // Проверяем, не превышен ли лимит тегов
+        if (currentTags.length >= 3) {
+            alert('Максимум 3 тега на статью');
+            return;
+        }
+
+        // Добавляем тег, если его еще нет
+        if (!currentTags.includes(tagName)) {
+            currentTags.push(tagName);
+            tagsInput.value = currentTags.join(', ');
+            updateTagsPreview(tagsInput.value);
+        }
+
+        clearTagSuggestions();
+        tagsInput.focus();
+    }
+
+    // Функция для обновления предпросмотра тегов
+    function updateTagsPreview(tagsText) {
+        const previewContainer = document.getElementById('tagsPreview');
+        const tags = extractTagsFromText(tagsText);
+
+        previewContainer.innerHTML = '';
+
+        if (tags.length === 0) {
+            previewContainer.innerHTML = '<div class="empty-preview">Теги не добавлены</div>';
+            return;
+        }
+
+        tags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag-preview';
+            tagElement.textContent = `#${tag}`;
+            previewContainer.appendChild(tagElement);
+        });
+    }
+
+    // Функция для извлечения тегов из текста
+    function extractTagsFromText(text) {
+        if (!text) return [];
+
+        const tagPattern = /#(\w+)/g;
+        const matches = text.match(tagPattern);
+
+        if (!matches) return [];
+
+        return matches.map(match => match.substring(1)) // Убираем #
+            .slice(0, 3); // Ограничиваем 3 тегами
+    }
+
+    function clearTagSuggestions() {
+        const suggestionsContainer = document.getElementById('tagSuggestions');
+        suggestionsContainer.innerHTML = '';
+        suggestionsContainer.style.display = 'none';
+    }
+
+    // Обновляем функцию saveArticle для отправки тегов
+    async function saveArticle() {
+        const title = document.getElementById('title').value;
+        const shortDescription = document.getElementById('shortDescription').value;
+        const isPublished = document.getElementById('isPublished').checked;
+        const tagsText = document.getElementById('tags').value;
+
+        // Извлекаем теги из текста
+        const tags = extractTagsFromText(tagsText);
+
+        // Валидация формы
+        if (!title.trim()) {
+            alert('Введите заголовок статьи');
+            return;
+        }
+
+        if (!shortDescription.trim()) {
+            alert('Введите краткое описание статьи');
+            return;
+        }
+
+        // Получаем блоки из sessionStorage
+        const blocksJson = sessionStorage.getItem('articleBlocks');
+        if (!blocksJson) {
+            alert('Нет данных о блоках статьи');
+            return;
+        }
+
+        // Показываем индикатор загрузки
+        const saveBtn = document.querySelector('.btn-primary');
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Сохранение...';
+        saveBtn.disabled = true;
+        document.body.classList.add('loading');
+
+        try {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('shortDescription', shortDescription);
+            formData.append('blocks', blocksJson);
+            formData.append('isPublished', isPublished.toString());
+
+            // Добавляем теги
+            tags.forEach(tag => {
+                formData.append('tags', tag);
+            });
+
+            const response = await fetch('/articles/create', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const article = await response.json();
+                alert('Статья успешно сохранена!');
+                sessionStorage.removeItem('articleBlocks');
+                window.location.href = '/articles/' + article.id;
+            } else {
+                const errorText = await response.text();
+                let errorMessage = 'Ошибка при сохранении статьи';
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    errorMessage = errorText;
+                }
+                alert(errorMessage);
+
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при сохранении статьи: ' + error.message);
+        } finally {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+            document.body.classList.remove('loading');
+        }
+    }
 </script>
 </body>
 </html>

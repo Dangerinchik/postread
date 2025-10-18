@@ -8,7 +8,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,27 +43,57 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(httpSecurityCorsConfigurer ->
-                        httpSecurityCorsConfigurer.configurationSource(request ->
-                                new CorsConfiguration().applyPermitDefaultValues())
+                .csrf(csrf -> csrf.disable()) // Полностью отключаем CSRF
+                .cors(cors -> cors
+                        .configurationSource(request -> {
+                            CorsConfiguration config = new CorsConfiguration();
+                            config.addAllowedOrigin("*");
+                            config.addAllowedMethod("*");
+                            config.addAllowedHeader("*");
+                            return config;
+                        })
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Разрешаем сессии для форм
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/**", "/uploads/**", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                        .requestMatchers("/articles/editor", "/articles/create-form", "/articles/create").authenticated()
-                        .requestMatchers("/secured/user").fullyAuthenticated()
+                        // Публичные endpoints
+                        .requestMatchers(
+                                "/auth/**",
+                                "/uploads/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/error"
+                        ).permitAll()
+
+                        // API endpoints - требуют аутентификации
+                        .requestMatchers("/api/reactions/**").authenticated()
+                        .requestMatchers("/api/**").permitAll() // Остальные API публичные
+
+                        // Endpoints для аутентифицированных пользователей
+                        .requestMatchers(
+                                "/articles/editor",
+                                "/articles/create-form",
+                                "/articles/create",
+                                "/articles/edit/**",
+                                "/articles/delete/**"
+                        ).authenticated()
+
+                        // Административные endpoints
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // Все остальные запросы разрешены
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
                         .loginPage("/auth/login")
                         .loginProcessingUrl("/auth/login")
-                        .defaultSuccessUrl("/articles")
+                        .defaultSuccessUrl("/articles", true)
                         .failureUrl("/auth/login?error=true")
                         .permitAll()
                 )
