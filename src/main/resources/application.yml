@@ -10,6 +10,15 @@ spring:
       ddl-auto: none
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        # Явно указываем использовать UTC для всех временных меток
+        connection:
+          timezone: UTC
+    # Добавляем это свойство для корректной работы с временем
+    open-in-view: false
   servlet:
     multipart:
       max-file-size: 10MB
@@ -22,9 +31,11 @@ spring:
     clean-disabled: false
     validate-on-migrate: true
 
+# Устанавливаем системный часовой пояс
 app:
   upload:
     dir: /uploads
+  timezone: Europe/Moscow
 
 postread:
   secret: drfghjk324567klfg

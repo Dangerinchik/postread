@@ -22,6 +22,7 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final TagService tagService;
+    private final CommentService commentService;
 
     @Transactional
     public Article createArticle(String title, String shortDescription,
@@ -191,6 +192,10 @@ public class ArticleService {
         // Безопасное получение количества рецензий
         dto.setReviewsCount(getReviewsCount(article.getId()));
         dto.setHasReviews(hasReviews(article.getId()));
+
+        Long commentsCount = commentService.getCommentsCountForArticle(article.getId());
+        dto.setCommentsCount(commentsCount);
+        dto.setHasComments(commentsCount > 0);
 
         return dto;
     }

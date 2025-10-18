@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Data
 @Entity
@@ -25,7 +27,7 @@ public class Comment {
     private Article article;
 
     @Column(name = "comment_text", nullable = false, columnDefinition = "TEXT")
-    private String commentText;
+    private String content;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -33,18 +35,24 @@ public class Comment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToOne
+    @ManyToOne(fetch=FetchType.EAGER)
     @JoinColumn(name = "reference_id")
-    private Comment reference;
+    private Comment parentComment;
 
     @PrePersist
     protected void onCreate() {
+//        ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+//        ZonedDateTime moscowTime = ZonedDateTime.now(moscowZone);
+//        this.createdAt = moscowTime.toLocalDateTime();
+//        this.updatedAt = moscowTime.toLocalDateTime();
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
+//        ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+//        ZonedDateTime moscowTime = ZonedDateTime.now(moscowZone);
         updatedAt = LocalDateTime.now();
     }
 }

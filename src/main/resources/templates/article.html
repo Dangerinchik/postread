@@ -572,6 +572,318 @@
             margin: 10px 0;
             border-left: 4px solid #3498db;
         }
+
+        /* Стили для секции комментариев */
+        .comments-section {
+            margin-top: 50px;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .comments-section h3 {
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comments-count {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-weight: normal;
+        }
+
+        /* Форма комментария */
+        .add-comment-form {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .add-comment-form h4 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        #commentContent {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        #commentContent:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .comment-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .char-counter {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .char-counter.warning {
+            color: #dc3545;
+        }
+
+        .auth-required {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .auth-required a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .auth-required a:hover {
+            text-decoration: underline;
+        }
+
+        /* Список комментариев */
+        .comments-list {
+            margin-top: 20px;
+        }
+
+        .comment-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .comment-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1em;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .comment-author-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comment-author-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .comment-date {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        .comment-actions-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-reply, .btn-delete-comment {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-reply:hover {
+            background-color: #e9ecef;
+            color: #3498db;
+        }
+
+        .btn-delete-comment:hover {
+            background-color: #e9ecef;
+            color: #dc3545;
+        }
+
+        .comment-content {
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            cursor: text;
+        }
+
+        .comment-content:hover {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .loading-comments, .no-comments {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .comment-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .comment-success {
+            background-color: #d1edff;
+            color: #0c5460;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        /* Стили для системы ответов */
+        .reply-to-info {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reply-to-info span {
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+
+        .btn-cancel-reply {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .btn-cancel-reply:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* Вложенные комментарии */
+        .comment-replies {
+            margin-left: 60px;
+            margin-top: 10px;
+            padding-left: 20px;
+            border-left: 2px solid #e9ecef;
+        }
+
+        .comment-item.has-replies {
+            margin-bottom: 5px;
+        }
+
+        .reply-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #3498db;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .reply-indicator::before {
+            content: "↳";
+            font-size: 1.2em;
+        }
+
+        .btn-reply {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-reply:hover {
+            background-color: #e9ecef;
+            color: #3498db;
+        }
+
+        .btn-reply::before {
+            content: "↩️";
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -767,9 +1079,53 @@
         <div id="reviewsList" class="reviews-list">
             <p style="color: #6c757d; font-style: italic;">Загрузка рецензий...</p>
         </div>
-<!--        <a th:href="@{/articles/{id}/reviews(id=${article.id})}" class="btn btn-secondary">-->
-<!--            📖 Все рецензии (<span th:text="${article.reviewsCount}">0</span>)-->
-<!--        </a>-->
+    </div>
+
+    <!-- Секция комментариев -->
+    <div class="comments-section" th:if="${article.published}">
+        <h3>💬 Комментарии
+            <span class="comments-count" th:text="'(' + ${article.commentsCount} + ')'"
+                  th:if="${article.commentsCount > 0}"></span>
+        </h3>
+
+        <!-- Основная форма добавления комментария -->
+        <div class="add-comment-form" th:if="${#authorization.expression('isAuthenticated()')}">
+            <h4 id="commentFormTitle">Добавить комментарий</h4>
+            <form id="commentForm">
+                <input type="hidden" id="parentCommentId" value="">
+                <div id="replyToInfo" class="reply-to-info" style="display: none;">
+                    <span id="replyToText"></span>
+                    <button type="button" id="cancelReply" class="btn-cancel-reply">✕</button>
+                </div>
+                <textarea id="commentContent"
+                          placeholder="Напишите ваш комментарий..."
+                          rows="4"
+                          maxlength="1000"
+                          required></textarea>
+                <div class="comment-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span id="submitButtonText">Отправить комментарий</span>
+                    </button>
+                    <span class="char-counter">
+                        <span id="charCount">0</span>/1000
+                    </span>
+                </div>
+            </form>
+        </div>
+
+        <div th:unless="${#authorization.expression('isAuthenticated()')}" class="auth-required">
+            <p>📝 <a th:href="@{/auth/login}">Войдите</a>, чтобы оставить комментарий</p>
+        </div>
+
+        <!-- Список комментариев -->
+        <div class="comments-list" id="commentsList">
+            <div class="loading-comments" th:if="${article.hasComments}">
+                <p>Загрузка комментариев...</p>
+            </div>
+            <div class="no-comments" th:unless="${article.hasComments}">
+                <p>Пока нет комментариев. Будьте первым!</p>
+            </div>
+        </div>
     </div>
 
     <div class="actions">
@@ -801,6 +1157,12 @@
         // Загружаем рецензии (только для оригинальных статей)
         if (![[${article.review}]]) {
             loadArticleReviews(articleId);
+        }
+
+        // Загружаем комментарии если статья опубликована
+        if ([[${article.published}]]) {
+            loadComments(articleId);
+            setupCommentForm(articleId);
         }
 
         // Обработка ошибок загрузки медиафайлов
@@ -1054,6 +1416,466 @@
         container.innerHTML = reviewsHTML;
     }
 
+    // Функции для работы с комментариями
+    let comments = [];
+    let currentParentCommentId = null;
+    let replyingToComment = null;
+
+    // Загрузка комментариев
+    async function loadComments(articleId) {
+        try {
+            const response = await fetch(`/api/comments/article/${articleId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            comments = data.comments || [];
+
+            displayComments(comments);
+
+        } catch (error) {
+            console.error('Ошибка загрузки комментариев:', error);
+            showCommentsError('Не удалось загрузить комментарии');
+        }
+    }
+
+    // Отображение комментариев с поддержкой вложенности
+    function displayComments(comments) {
+        const container = document.getElementById('commentsList');
+
+        if (!comments || comments.length === 0) {
+            container.innerHTML = `
+            <div class="no-comments">
+                <p>Пока нет комментариев. Будьте первым!</p>
+            </div>
+        `;
+            return;
+        }
+
+        // Разделяем на корневые комментарии и ответы
+        const rootComments = comments.filter(comment => !comment.parentCommentId);
+        const replyComments = comments.filter(comment => comment.parentCommentId);
+
+        let commentsHTML = '';
+
+        rootComments.forEach(comment => {
+            commentsHTML += buildCommentHTML(comment, replyComments, 0);
+        });
+
+        container.innerHTML = commentsHTML;
+
+        // Добавляем обработчики для ответов
+        setupReplyHandlers();
+    }
+
+    // Рекурсивная функция построения дерева комментариев
+    function buildCommentHTML(comment, allReplies, depth) {
+        const commentDate = formatCommentDateReliable(comment.createdAt);
+        const isCurrentUserComment = checkIfCurrentUserComment(comment);
+
+        // Находим ответы на этот комментарий
+        const replies = allReplies.filter(reply => reply.parentCommentId === comment.id);
+        const hasReplies = replies.length > 0;
+
+        let html = `
+        <div class="comment-item ${hasReplies ? 'has-replies' : ''}" data-comment-id="${comment.id}">
+            <div class="comment-header">
+                <div class="comment-author">
+                    <div class="comment-author-avatar"
+                         style="${comment.author.icon ? `background-image: url('${comment.author.icon}')` : ''}">
+                        ${!comment.author.icon ? (comment.author.name ? comment.author.name.charAt(0).toUpperCase() : '?') : ''}
+                    </div>
+                    <div class="comment-author-info">
+                        <div class="comment-author-name">${escapeHtml(comment.author.name || 'Неизвестный автор')}</div>
+                        <div class="comment-date">${commentDate}</div>
+                    </div>
+                </div>
+                <div class="comment-actions-buttons">
+                    <button class="btn-reply" onclick="startReply(${comment.id}, '${escapeHtml(comment.author.name || 'Автор')}')"
+                            title="Ответить на комментарий">Ответить</button>
+                    ${isCurrentUserComment ? `
+                        <button class="btn-delete-comment" onclick="deleteComment(${comment.id})"
+                                title="Удалить комментарий">🗑️</button>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="comment-content" onclick="startReply(${comment.id}, '${escapeHtml(comment.author.name || 'Автор')}')">
+                ${escapeHtml(comment.content || '')}
+            </div>
+    `;
+
+        // Добавляем ответы если есть
+        if (hasReplies) {
+            html += `<div class="comment-replies">`;
+            replies.forEach(reply => {
+                html += buildCommentHTML(reply, allReplies, depth + 1);
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    // Настройка формы комментария
+    function setupCommentForm(articleId) {
+        const form = document.getElementById('commentForm');
+        const textarea = document.getElementById('commentContent');
+        const charCount = document.getElementById('charCount');
+        const cancelReplyBtn = document.getElementById('cancelReply');
+
+        if (!form) {
+            console.warn('Форма комментариев не найдена');
+            return;
+        }
+
+        // Счетчик символов
+        if (textarea && charCount) {
+            textarea.addEventListener('input', function() {
+                const length = this.value.length;
+                charCount.textContent = length;
+
+                if (length > 900) {
+                    charCount.classList.add('warning');
+                } else {
+                    charCount.classList.remove('warning');
+                }
+            });
+        }
+
+        // Отправка формы
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const content = textarea.value.trim();
+            const parentCommentId = document.getElementById('parentCommentId').value || null;
+
+            if (!content) {
+                alert('Пожалуйста, введите текст комментария');
+                return;
+            }
+
+            if (content.length > 1000) {
+                alert('Комментарий не может превышать 1000 символов');
+                return;
+            }
+
+            await submitComment(articleId, content, parentCommentId);
+        });
+
+        // Отмена ответа
+        if (cancelReplyBtn) {
+            cancelReplyBtn.addEventListener('click', cancelReply);
+        }
+    }
+
+    // Начало ответа на комментарий
+    function startReply(commentId, authorName) {
+        currentParentCommentId = commentId;
+        replyingToComment = comments.find(c => c.id === commentId);
+
+        // Обновляем UI
+        const parentCommentIdInput = document.getElementById('parentCommentId');
+        const replyToInfo = document.getElementById('replyToInfo');
+        const replyToText = document.getElementById('replyToText');
+        const commentFormTitle = document.getElementById('commentFormTitle');
+        const submitButtonText = document.getElementById('submitButtonText');
+        const commentContent = document.getElementById('commentContent');
+
+        if (parentCommentIdInput) parentCommentIdInput.value = commentId;
+        if (replyToText) replyToText.textContent = `Ответ на комментарий ${authorName}`;
+        if (replyToInfo) replyToInfo.style.display = 'flex';
+        if (commentFormTitle) commentFormTitle.textContent = 'Ответ на комментарий';
+        if (submitButtonText) submitButtonText.textContent = 'Отправить ответ';
+
+        // Прокручиваем к форме
+        if (commentContent) {
+            commentContent.focus();
+        }
+        const addCommentForm = document.querySelector('.add-comment-form');
+        if (addCommentForm) {
+            addCommentForm.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }
+
+    // Отмена ответа
+    function cancelReply() {
+        currentParentCommentId = null;
+        replyingToComment = null;
+
+        // Сбрасываем UI
+        const parentCommentIdInput = document.getElementById('parentCommentId');
+        const replyToInfo = document.getElementById('replyToInfo');
+        const commentFormTitle = document.getElementById('commentFormTitle');
+        const submitButtonText = document.getElementById('submitButtonText');
+        const commentContent = document.getElementById('commentContent');
+        const charCount = document.getElementById('charCount');
+
+        if (parentCommentIdInput) parentCommentIdInput.value = '';
+        if (replyToInfo) replyToInfo.style.display = 'none';
+        if (commentFormTitle) commentFormTitle.textContent = 'Добавить комментарий';
+        if (submitButtonText) submitButtonText.textContent = 'Отправить комментарий';
+        if (commentContent) commentContent.value = '';
+        if (charCount) {
+            charCount.textContent = '0';
+            charCount.classList.remove('warning');
+        }
+    }
+
+    // Настройка обработчиков ответов
+    function setupReplyHandlers() {
+        // Обработчики уже установлены через onclick в HTML
+    }
+
+    // Отправка комментария (исправленная версия)
+    async function submitComment(articleId, content, parentCommentId) {
+        const submitBtn = document.querySelector('#commentForm button[type="submit"]');
+
+        if (!submitBtn) {
+            console.error('Кнопка отправки не найдена');
+            showCommentError('Ошибка: форма комментариев не найдена');
+            return;
+        }
+
+        // Сохраняем оригинальный HTML кнопки
+        const originalHTML = submitBtn.innerHTML;
+        const originalText = submitBtn.textContent || 'Отправить комментарий';
+
+        // Показываем индикатор загрузки
+        submitBtn.innerHTML = '<span class="loading-spinner">⏳</span> Отправка...';
+        submitBtn.disabled = true;
+        document.body.classList.add('loading');
+
+        try {
+            // Создаем параметры запроса
+            const params = new URLSearchParams();
+            params.append('content', content);
+            if (parentCommentId) {
+                params.append('parentCommentId', parentCommentId);
+            }
+
+            const response = await fetch(`/api/comments/article/${articleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params,
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorText = await response.text();
+                    if (errorText) {
+                        errorMessage = errorText;
+                    }
+                } catch (e) {
+                    // Игнорируем ошибки парсинга текста ошибки
+                }
+                throw new Error(errorMessage);
+            }
+
+            const newComment = await response.json();
+
+            // Сбрасываем форму
+            cancelReply();
+
+            // Показываем сообщение об успехе
+            showCommentSuccess(parentCommentId ? 'Ответ успешно добавлен!' : 'Комментарий успешно добавлен!');
+
+            // Перезагружаем комментарии
+            await loadComments(articleId);
+
+        } catch (error) {
+            console.error('Ошибка отправки комментария:', error);
+            let errorMessage = 'Ошибка при отправке комментария';
+            if (error.message.includes('HTTP error! status: 401')) {
+                errorMessage = 'Необходимо авторизоваться для отправки комментариев';
+            } else if (error.message.includes('HTTP error! status: 403')) {
+                errorMessage = 'У вас нет прав для выполнения этого действия';
+            } else if (error.message.includes('HTTP error! status: 400')) {
+                errorMessage = 'Неверный запрос: ' + error.message;
+            } else {
+                errorMessage = 'Ошибка при отправке комментария: ' + error.message;
+            }
+            showCommentError(errorMessage);
+        } finally {
+            // Восстанавливаем кнопку
+            submitBtn.innerHTML = originalHTML;
+            submitBtn.disabled = false;
+            document.body.classList.remove('loading');
+        }
+    }
+
+    // Удаление комментария
+    async function deleteComment(commentId) {
+        if (!confirm('Вы уверены, что хотите удалить этот комментарий?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/comments/${commentId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorText = await response.text();
+                    if (errorText) {
+                        errorMessage = errorText;
+                    }
+                } catch (e) {
+                    // Игнорируем ошибки парсинга текста ошибки
+                }
+                throw new Error(errorMessage);
+            }
+
+            showCommentSuccess('Комментарий удален');
+
+            // Перезагружаем комментарии
+            const articleId = [[${article.id}]];
+            await loadComments(articleId);
+
+        } catch (error) {
+            console.error('Ошибка удаления комментария:', error);
+            let errorMessage = 'Ошибка при удалении комментария';
+            if (error.message.includes('HTTP error! status: 401')) {
+                errorMessage = 'Необходимо авторизоваться для удаления комментариев';
+            } else if (error.message.includes('HTTP error! status: 403')) {
+                errorMessage = 'Вы можете удалять только свои комментарии';
+            } else if (error.message.includes('HTTP error! status: 404')) {
+                errorMessage = 'Комментарий не найден';
+            } else {
+                errorMessage = 'Ошибка при удалении комментария: ' + error.message;
+            }
+            showCommentError(errorMessage);
+        }
+    }
+
+    // Вспомогательные функции для комментариев
+    function formatCommentDateReliable(dateString) {
+        try {
+            if (!dateString) return 'неизвестно';
+
+            // Убедимся, что дата правильно парсится
+            let date;
+            if (dateString.includes('T')) {
+                date = new Date(dateString);
+            } else {
+                // Если это LocalDateTime без 'T', добавляем его
+                date = new Date(dateString.replace(' ', 'T') + 'Z');
+            }
+
+            // Проверяем валидность даты
+            if (isNaN(date.getTime())) {
+                return 'неизвестно';
+            }
+
+            const now = new Date();
+            const diffMs = now.getTime() - date.getTime();
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'только что';
+            if (diffMins < 60) return `${diffMins} мин. назад`;
+            if (diffHours < 24) return `${diffHours} ч. назад`;
+            if (diffDays < 7) return `${diffDays} дн. назад`;
+
+            // Для старых дат показываем полную дату
+            return date.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            console.error('Error formatting date:', e);
+            return 'неизвестно';
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function checkIfCurrentUserComment(comment) {
+        try {
+            // В Thymeleaf можно получить ID текущего пользователя
+            const currentUserId = [[${#authentication?.principal?.id}]];
+            return currentUserId && comment.author && currentUserId === comment.author.id;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function showCommentError(message) {
+        const container = document.getElementById('commentsList');
+        if (!container) {
+            console.error('Контейнер комментариев не найден');
+            return;
+        }
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'comment-error';
+        errorDiv.textContent = message;
+        container.insertBefore(errorDiv, container.firstChild);
+
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+
+    function showCommentSuccess(message) {
+        const container = document.getElementById('commentsList');
+        if (!container) {
+            console.error('Контейнер комментариев не найден');
+            return;
+        }
+
+        const successDiv = document.createElement('div');
+        successDiv.className = 'comment-success';
+        successDiv.textContent = message;
+        container.insertBefore(successDiv, container.firstChild);
+
+        setTimeout(() => {
+            if (successDiv.parentNode) {
+                successDiv.remove();
+            }
+        }, 3000);
+    }
+
+    function showCommentsError(message) {
+        const container = document.getElementById('commentsList');
+        if (!container) {
+            console.error('Контейнер комментариев не найден');
+            return;
+        }
+
+        container.innerHTML = `
+        <div class="comment-error">
+            ${message}
+            <button onclick="loadComments([[${article.id}]])"
+                    style="margin-left: 10px; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                Повторить
+            </button>
+        </div>
+    `;
+    }
     // Вспомогательная функция для форматирования даты
     function formatDate(dateString) {
         const date = new Date(dateString);

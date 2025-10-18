@@ -5,32 +5,47 @@ services:
     ports:
       - 8080:8080
     depends_on:
-       db:
-         condition: service_healthy
+      db:
+        condition: service_healthy
     environment:
       - DB_PASSWORD=${DB_PASSWORD}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postreaddb
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - TZ=Europe/Moscow  # Добавляем часовой пояс
     volumes:
       - D:/postread_images:/uploads
+    # Устанавливаем правильный часовой пояс в контейнере
+    command: >
+      sh -c "
+      cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime &&
+      echo 'Europe/Moscow' > /etc/timezone &&
+      java org.springframework.boot.loader.launch.JarLauncher
+      "
+
   db:
-     image: postgres:latest
-     container_name: postreadpostgres
-     restart: always
-     user: postgres
-     volumes:
-       - db-data:/var/lib/postgresql/data
-     environment:
-       - POSTGRES_DB=postreaddb
-       - POSTGRES_PASSWORD=${DB_PASSWORD}
-     expose:
-       - 5432
-     healthcheck:
-       test: [ "CMD", "pg_isready" ]
-       interval: 10s
-       timeout: 5s
-       retries: 5
+    image: postgres:latest
+    container_name: postreadpostgres
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postreaddb
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - TZ=Europe/Moscow  # Часовой пояс для PostgreSQL
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c log_timezone=Europe/Moscow
+      -c timezone=Europe/Moscow
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: postread_pgadmin
@@ -38,6 +53,7 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@postread.com
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin123}
+      - TZ=Europe/Moscow  # Часовой пояс для pgAdmin
     ports:
       - "5050:80"
     depends_on:
@@ -48,5 +64,5 @@ services:
       - ./pgadmin/servers.json:/pgadmin4/servers.json
 
 volumes:
-   db-data:
-   pgadmin-data:
+  db-data:
+  pgadmin-data:

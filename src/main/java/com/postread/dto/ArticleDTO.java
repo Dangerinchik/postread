@@ -24,6 +24,10 @@ public class ArticleDTO {
     private int reviewsCount;
     private boolean hasReviews;
 
+    // Новые поля для комментариев
+    private Long commentsCount;
+    private boolean hasComments;
+
     public ArticleDTO() {}
 
     // Добавьте геттер для review (Thymeleaf использует геттеры)
@@ -42,5 +46,13 @@ public class ArticleDTO {
 
     public void setIsReview(boolean review) {
         this.review = review;
+    }
+
+    public Long getCommentsCount() {
+        return commentsCount != null ? commentsCount : 0L;
+    }
+
+    public boolean isHasComments() {
+        return commentsCount != null && commentsCount > 0;
     }
 }
