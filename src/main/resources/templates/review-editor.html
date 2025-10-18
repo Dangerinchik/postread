@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор рецензии</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .original-article-info {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #b3d9ff;
+        }
+
+        .original-article-info h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            align-items: center;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toolbar button:hover {
+            background-color: #e9ecef;
+        }
+
+        .btn-primary {
+            background-color: #3498db !important;
+            color: white;
+            border-color: #3498db !important;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9 !important;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d !important;
+            color: white;
+            border-color: #6c757d !important;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62 !important;
+        }
+
+        .text-formatting-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f1f3f4;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .text-formatting-toolbar select,
+        .text-formatting-toolbar input {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .format-btn {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .format-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .format-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .blocks-container {
+            min-height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            background-color: #fafafa;
+        }
+
+        .block {
+            margin-bottom: 20px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .block:hover {
+            border-color: #3498db;
+        }
+
+        .text-block {
+            min-height: 60px;
+        }
+
+        .media-block {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .rich-text-editor {
+            width: 100%;
+            min-height: 60px;
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            line-height: 1.5;
+            resize: none;
+            font-family: inherit;
+            background: white;
+            overflow: hidden;
+            height: auto;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .rich-text-editor:focus {
+            outline: none;
+            background-color: #f8f9fa;
+        }
+
+        .rich-text-editor[placeholder]:empty:before {
+            content: attr(placeholder);
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .media-content {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+
+        .media-content img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .media-content video {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .block-controls {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .block:hover .block-controls {
+            opacity: 1;
+        }
+
+        .block-controls button {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-move {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .next-btn {
+            display: block;
+            width: 220px;
+            margin: 30px auto 0;
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .next-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .next-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .media-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .media-preview img,
+        .media-preview video {
+            max-width: 200px;
+            max-height: 150px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .word-wrap-handler {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>✍️ Редактор рецензии</h1>
+
+    <div class="original-article-info">
+        <h3>Рецензия на статью: <span id="originalArticleTitle">Загрузка...</span></h3>
+        <a href="#" id="originalArticleLink" class="btn btn-secondary">📖 Перейти к оригинальной статье</a>
+    </div>
+
+    <div class="toolbar">
+        <button type="button" onclick="addTextBlock()" class="btn-primary">
+            📝 Добавить текст
+        </button>
+        <button type="button" onclick="addMediaBlock()" class="btn-primary">
+            🖼️ Добавить медиа
+        </button>
+        <button type="button" onclick="clearAllBlocks()" style="background-color: #dc3545; color: white;">
+            🗑️ Очистить все
+        </button>
+    </div>
+
+    <div id="blocksContainer" class="blocks-container">
+        <div class="empty-state">
+            <h3>Начните создавать рецензию</h3>
+            <p>Добавьте текстовые блоки или медиафайлы используя кнопки выше</p>
+        </div>
+    </div>
+
+    <button id="nextBtn" class="next-btn" onclick="goToNextStep()" disabled>
+        Далее →
+    </button>
+</div>
+
+<script>
+    let originalArticleId = null;
+    let currentUserId = null;
+
+    // Проверяем аутентификацию при загрузке редактора
+    fetch('/secured/user')
+        .then(response => {
+            if (!response.ok) {
+                window.location.href = '/auth/login';
+            }
+            return response.text();
+        })
+        .then(username => {
+            console.log('Authenticated as:', username);
+        })
+        .catch(error => {
+            console.error('Auth check failed:', error);
+            window.location.href = '/auth/login';
+        });
+
+    let globalFontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    let globalFontSize = "16px";
+    let currentEditingBlock = null;
+
+    function autoResizeTextBlock(element) {
+        const selection = window.getSelection();
+        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        const currentCursorPosition = range ? range.startOffset : 0;
+
+        element.style.height = 'auto';
+        const newHeight = Math.max(element.scrollHeight, 60);
+        element.style.height = newHeight + 'px';
+
+        if (range && currentCursorPosition > 0) {
+            try {
+                const textNode = element.childNodes[0] || element;
+                if (textNode.nodeType === Node.TEXT_NODE || element.childNodes.length === 0) {
+                    const newRange = document.createRange();
+                    newRange.setStart(textNode, Math.min(currentCursorPosition, textNode.length || 0));
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                }
+            } catch (e) {
+                console.log('Could not restore cursor position:', e);
+            }
+        }
+    }
+
+    function handleLongWords(element) {
+        const text = element.innerText || element.textContent;
+        const words = text.split(/\s+/);
+        const veryLongWords = words.filter(word => word.length > 20);
+
+        if (veryLongWords.length > 0) {
+            console.log('Обнаружены очень длинные слова:', veryLongWords);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editor = document.getElementById('blocksContainer');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let blockCounter = 0;
+
+        // Получаем ID оригинальной статьи из URL
+        const pathParts = window.location.pathname.split('/');
+        originalArticleId = pathParts[pathParts.length - 1];
+
+        // Загружаем информацию о статье
+        fetch(`/articles/api/${originalArticleId}`)
+            .then(response => response.json())
+            .then(article => {
+                document.getElementById('originalArticleTitle').textContent = article.title;
+                document.getElementById('originalArticleLink').href = `/articles/${article.id}`;
+            });
+
+        window.getEditorContent = function() {
+            const blocks = [];
+            const blockElements = editor.querySelectorAll('.block');
+
+            blockElements.forEach((block, index) => {
+                const blockType = block.classList.contains('text-block') ? 'text' :
+                    block.classList.contains('media-block') ? 'media' : 'code';
+
+                let content = '';
+                let file = null;
+
+                if (blockType === 'text') {
+                    const richEditor = block.querySelector('.rich-text-editor');
+                    if (richEditor) {
+                        content = richEditor.innerHTML;
+                    }
+                } else if (blockType === 'media') {
+                    const fileInput = block.querySelector('input[type="file"]');
+                    const pathInput = block.querySelector('input[type="text"]');
+
+                    if (fileInput && fileInput.files.length > 0) {
+                        file = fileInput.files[0];
+                        content = file.name;
+                    } else if (pathInput && pathInput.value.trim()) {
+                        content = pathInput.value.trim();
+                    }
+                }
+
+                const blockData = {
+                    type: blockType,
+                    content: content.trim(),
+                    order: index
+                };
+
+                if (file) {
+                    blockData.file = file;
+                }
+
+                blocks.push(blockData);
+            });
+
+            return blocks;
+        };
+
+        window.addTextBlock = function(content = '') {
+            hideEmptyState();
+            blockCounter++;
+            const block = document.createElement('div');
+            block.className = 'block text-block';
+            block.innerHTML = `
+        <div class="block-controls">
+          <button type="button" class="btn-move" onclick="moveBlockUp(this)">↑</button>
+          <button type="button" class="btn-move" onclick="moveBlockDown(this)">↓</button>
+          <button type="button" class="btn-remove" onclick="removeBlock(this)">×</button>
+        </div>
+        <div class="text-formatting-toolbar">
+          <button type="button" class="format-btn" onclick="formatText('bold')" title="Жирный"><b>B</b></button>
+          <button type="button" class="format-btn" onclick="formatText('italic')" title="Курсив"><i>I</i></button>
+          <button type="button" class="format-btn" onclick="formatText('underline')" title="Подчеркнутый"><u>U</u></button>
+          <select onchange="formatText('fontName', this.value)" title="Шрифт">
+            <option value="">Шрифт</option>
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+          </select>
+          <input type="color" onchange="formatText('foreColor', this.value)" title="Цвет текста">
+          <select onchange="formatText('fontSize', this.value)" title="Размер">
+            <option value="">Размер</option>
+            <option value="1">Маленький</option>
+            <option value="3">Нормальный</option>
+            <option value="5">Большой</option>
+            <option value="7">Очень большой</option>
+          </select>
+          <button type="button" class="format-btn" onclick="formatText('justifyLeft')" title="Выравнивание по левому краю">⬅</button>
+          <button type="button" class="format-btn" onclick="formatText('justifyCenter')" title="Выравнивание по центру">↔</button>
+          <button type="button" class="format-btn" onclick="formatText('justifyRight')" title="Выравнивание по правому краю">➡</button>
+          <button type="button" class="format-btn" onclick="formatText('justifyFull')" title="Выравнивание по ширине">⤢</button>
+        </div>
+        <div class="rich-text-editor word-wrap-handler"
+             contenteditable="true"
+             onfocus="setCurrentBlock(this)"
+             oninput="autoResizeTextBlock(this)"
+             placeholder="Введите текст рецензии..."
+             style="font-family: ${globalFontFamily}; font-size: ${globalFontSize};">
+          ${content}
+        </div>
+      `;
+            editor.appendChild(block);
+
+            const newEditor = block.querySelector('.rich-text-editor');
+            if (newEditor) {
+                setTimeout(() => autoResizeTextBlock(newEditor), 10);
+            }
+
+            updateNextButton();
+        };
+
+        window.addMediaBlock = function(filePath = '') {
+            hideEmptyState();
+            blockCounter++;
+            const block = document.createElement('div');
+            block.className = 'block media-block';
+            block.innerHTML = `
+        <div class="block-controls">
+          <button type="button" class="btn-move" onclick="moveBlockUp(this)">↑</button>
+          <button type="button" class="btn-move" onclick="moveBlockDown(this)">↓</button>
+          <button type="button" class="btn-remove" onclick="removeBlock(this)">×</button>
+        </div>
+        <div class="media-content">
+          <input type="file" accept="image/*,video/*,audio/*" style="margin-bottom: 10px;" onchange="previewMedia(this)">
+          <div style="text-align: center; margin: 8px 0; color: #666;">ИЛИ</div>
+          <input type="text" placeholder="Введите путь к файлу..." value="${filePath}"
+                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="media-preview"></div>
+        </div>
+      `;
+            editor.appendChild(block);
+            updateNextButton();
+        };
+
+        window.formatText = function(command, value = null) {
+            if (!currentEditingBlock) return;
+
+            currentEditingBlock.focus();
+            document.execCommand(command, false, value);
+
+            autoResizeTextBlock(currentEditingBlock);
+            handleLongWords(currentEditingBlock);
+        };
+
+        window.setCurrentBlock = function(element) {
+            currentEditingBlock = element;
+        };
+
+        window.goToNextStep = async function() {
+            const blocks = getEditorContent();
+
+            const validBlocks = blocks.filter(block => {
+                if (block.type === 'text') {
+                    return true;
+                } else if (block.type === 'media') {
+                    return true;
+                }
+                return false;
+            });
+
+            if (validBlocks.length === 0) {
+                alert('Добавьте хотя бы один блок!');
+                return;
+            }
+
+            nextBtn.disabled = true;
+            nextBtn.textContent = 'Подготовка данных...';
+            document.body.classList.add('loading');
+
+            try {
+                const processedBlocks = await processMediaFiles(validBlocks);
+
+                sessionStorage.setItem('reviewForArticleId', originalArticleId);
+                sessionStorage.setItem('articleBlocks', JSON.stringify(processedBlocks));
+
+                window.location.href = '/articles/create-review-form';
+            } catch (error) {
+                console.error('Error processing files:', error);
+                alert('Ошибка при обработке данных: ' + error.message);
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Далее →';
+                document.body.classList.remove('loading');
+            }
+        };
+
+        async function processMediaFiles(blocks) {
+            const processedBlocks = [];
+
+            for (let block of blocks) {
+                if (block.type === 'media' && block.file) {
+                    try {
+                        console.log('Uploading file:', block.file.name);
+                        const fileName = await uploadFileAndGetName(block.file);
+                        console.log('File uploaded successfully:', fileName);
+
+                        processedBlocks.push({
+                            type: block.type,
+                            content: fileName,
+                            order: block.order
+                        });
+                    } catch (error) {
+                        console.error('Error uploading file:', error);
+                        const pathInput = document.querySelector('input[type="text"]');
+                        const filePath = pathInput ? pathInput.value.trim() : block.file.name;
+
+                        processedBlocks.push({
+                            type: block.type,
+                            content: filePath,
+                            order: block.order
+                        });
+                    }
+                } else {
+                    processedBlocks.push({
+                        type: block.type,
+                        content: block.content || '',
+                        order: block.order
+                    });
+                }
+            }
+
+            return processedBlocks;
+        }
+
+        async function uploadFileAndGetName(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            console.log('Sending file to server:', file.name);
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.fileName) {
+                throw new Error(result.message || 'Неизвестная ошибка загрузки');
+            }
+
+            return result.fileName;
+        }
+
+        function hideEmptyState() {
+            const emptyState = editor.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        function updateNextButton() {
+            const blocks = getEditorContent();
+            const hasBlocks = blocks.length > 0;
+            nextBtn.disabled = !hasBlocks;
+        }
+
+        window.removeBlock = function(button) {
+            const block = button.closest('.block');
+            block.remove();
+
+            if (editor.querySelectorAll('.block').length === 0) {
+                const emptyState = editor.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.style.display = 'block';
+                }
+            }
+            updateNextButton();
+        };
+
+        window.moveBlockUp = function(button) {
+            const block = button.closest('.block');
+            const prevBlock = block.previousElementSibling;
+            if (prevBlock) {
+                block.parentNode.insertBefore(block, prevBlock);
+            }
+        };
+
+        window.moveBlockDown = function(button) {
+            const block = button.closest('.block');
+            const nextBlock = block.nextElementSibling;
+            if (nextBlock) {
+                block.parentNode.insertBefore(nextBlock, block);
+            }
+        };
+
+        window.clearAllBlocks = function() {
+            editor.innerHTML = `
+        <div class="empty-state">
+          <h3>Начните создавать рецензию</h3>
+          <p>Добавьте текстовые блоки или медиафайлы используя кнопки выше</p>
+        </div>
+      `;
+            updateNextButton();
+        };
+
+        window.previewMedia = function(input) {
+            const file = input.files[0];
+            const preview = input.closest('.media-content').querySelector('.media-preview');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (file.type.startsWith('image/')) {
+                        preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; max-height: 150px;">`;
+                    } else if (file.type.startsWith('video/')) {
+                        preview.innerHTML = `<video src="${e.target.result}" controls style="max-width: 200px; max-height: 150px;"></video>`;
+                    } else if (file.type.startsWith('audio/')) {
+                        preview.innerHTML = `<audio src="${e.target.result}" controls></audio>`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+            }
+        };
+
+        // Добавляем начальный текстовый блок
+        addTextBlock();
+    });
+</script>
+</body>
+</html>

@@ -3,6 +3,8 @@ package com.postread.controllers;
 import com.postread.data.Article;
 import com.postread.data.ArticleBlock;
 import com.postread.data.Tag;
+import com.postread.dto.ArticleBlockDTO;
+import com.postread.dto.ArticleDTO;
 import com.postread.security.User;
 import com.postread.repositories.ArticleRepository;
 import com.postread.repositories.UserRepository;
@@ -10,38 +12,33 @@ import com.postread.services.ArticleService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.postread.services.TagService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 @Controller
 @RequestMapping("/articles")
+@RequiredArgsConstructor
 public class ArticleController {
 
-    @Autowired
-    private ArticleService articleService;
-
-    @Autowired
-    private ArticleRepository articleRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private TagService tagService;
+    private final ArticleService articleService;
+    private final ArticleRepository articleRepository;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
+    private final TagService tagService;
 
     // Получаем текущего аутентифицированного пользователя
     private User getCurrentUser() {
@@ -57,29 +54,63 @@ public class ArticleController {
 
     @GetMapping
     public String getAllArticles(Model model) {
-        List<Article> articles = articleRepository.findAllByPublishedTrueOrderByCreatedAtDesc();
+        List<Article> articles = articleRepository.findAllOriginalArticles();
         model.addAttribute("articles", articles);
         return "articles-list";
     }
 
     @GetMapping("/{id}")
     public String getArticle(@PathVariable Long id, Model model) {
-        Optional<Article> articleOpt = articleRepository.findById(id);
-        if (articleOpt.isPresent()) {
-            Article article = articleOpt.get();
-            // Увеличиваем счетчик просмотров
-            article.setViewCount(article.getViewCount() + 1);
-            articleRepository.save(article);
+        try {
+            // Этот метод автоматически увеличивает счетчик просмотров
+            ArticleDTO articleDTO = articleService.getArticleDTO(id);
+            model.addAttribute("article", articleDTO);
 
-            model.addAttribute("article", article);
+            // Детальная отладочная информация
+            System.out.println("=== ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О СТАТЬЕ ===");
+            System.out.println("Статья ID: " + articleDTO.getId());
+            System.out.println("Заголовок: " + articleDTO.getTitle());
+            System.out.println("Просмотры: " + articleDTO.getViewCount());
+            System.out.println("Количество блоков: " +
+                    (articleDTO.getBlocks() != null ? articleDTO.getBlocks().size() : 0));
+
+            if (articleDTO.getBlocks() != null) {
+                for (int i = 0; i < articleDTO.getBlocks().size(); i++) {
+                    ArticleBlockDTO block = articleDTO.getBlocks().get(i);
+                    String contentPreview = block.getContent() != null ?
+                            block.getContent().substring(0, Math.min(50, block.getContent().length())) : "null";
+                    System.out.println("Блок " + i + ": ID=" + block.getId() +
+                            ", тип=" + block.getType() +
+                            ", порядок=" + block.getOrder() +
+                            ", контент=" + contentPreview);
+                }
+            } else {
+                System.out.println("Блоки: null");
+            }
+            System.out.println("=== КОНЕЦ ДЕТАЛЬНОЙ ИНФОРМАЦИИ ===");
+
             return "article";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Статья не найдена: " + e.getMessage());
+            return "error";
         }
-        return "redirect:/articles";
+    }
+
+    @GetMapping("/api/{id}")
+    @ResponseBody
+    public ResponseEntity<?> getArticleApi(@PathVariable Long id) {
+        try {
+            // API endpoint тоже увеличивает счетчик просмотров
+            ArticleDTO articleDTO = articleService.getArticleDTO(id);
+            return ResponseEntity.ok(articleDTO);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/editor")
     public String showEditor() {
-        // Проверяем аутентификацию
         try {
             getCurrentUser();
             return "article-editor";
@@ -88,15 +119,53 @@ public class ArticleController {
         }
     }
 
+    @GetMapping("/editor/{articleId}")
+    public String showReviewEditor(@PathVariable Long articleId, Model model) {
+        try {
+            getCurrentUser();
+            Optional<Article> article = articleRepository.findById(articleId);
+            if (article.isPresent()) {
+                model.addAttribute("originalArticle", article.get());
+                return "review-editor";
+            }
+            return "redirect:/articles";
+        } catch (RuntimeException e) {
+            return "redirect:/auth/login";
+        }
+    }
+
     @GetMapping("/create-form")
     public String showCreateForm() {
-        // Проверяем аутентификацию
         try {
             getCurrentUser();
             return "create-article";
         } catch (RuntimeException e) {
             return "redirect:/auth/login";
         }
+    }
+
+    @GetMapping("/create-review-form")
+    public String showCreateReviewForm() {
+        try {
+            getCurrentUser();
+            return "create-review";
+        } catch (RuntimeException e) {
+            return "redirect:/auth/login";
+        }
+    }
+
+    @GetMapping("/{id}/reviews")
+    public String getArticleReviews(@PathVariable Long id, Model model) {
+        Optional<Article> articleOpt = articleRepository.findById(id);
+        if (articleOpt.isPresent()) {
+            Article article = articleOpt.get();
+            List<Article> reviews = articleService.getReviewsForArticle(id);
+
+            model.addAttribute("article", article);
+            model.addAttribute("reviews", reviews);
+            return "reviews-list";
+        }
+        return "redirect:/articles";
     }
 
     @GetMapping("/search")
@@ -106,12 +175,10 @@ public class ArticleController {
             @RequestParam(required = false) String searchType,
             Model model) {
 
-        // Инициализируем пустые значения по умолчанию
         String searchTitleValue = title != null ? title : "";
         String searchTagsValue = "";
         String searchTypeValue = searchType != null ? searchType : "all";
 
-        // Если есть параметры поиска, выполняем поиск
         boolean hasSearchParams = (title != null && !title.trim().isEmpty()) ||
                 (tags != null && !tags.isEmpty());
 
@@ -120,13 +187,10 @@ public class ArticleController {
 
             try {
                 if ("tags".equals(searchType) && tags != null && !tags.isEmpty()) {
-                    // Поиск только по тегам
                     articles = articleService.searchArticlesByTags(tags);
                 } else if ("title".equals(searchType) && title != null && !title.trim().isEmpty()) {
-                    // Поиск только по названию
                     articles = articleService.searchArticlesByTitle(title);
                 } else {
-                    // Комбинированный поиск или поиск по умолчанию
                     articles = articleService.searchArticlesByTitleAndTags(title, tags);
                 }
 
@@ -139,12 +203,10 @@ public class ArticleController {
                 model.addAttribute("resultsCount", 0);
             }
 
-            // Формируем строку тегов для отображения
             if (tags != null && !tags.isEmpty()) {
                 searchTagsValue = String.join(", ", tags);
             }
         } else {
-            // Если нет параметров поиска, просто показываем пустую страницу
             model.addAttribute("articles", new ArrayList<>());
             model.addAttribute("resultsCount", 0);
         }
@@ -157,9 +219,6 @@ public class ArticleController {
         return "search";
     }
 
-    /**
-     * API для поиска статей (для AJAX)
-     */
     @GetMapping("/api/search")
     @ResponseBody
     public ResponseEntity<?> searchArticlesApi(
@@ -185,36 +244,6 @@ public class ArticleController {
         }
     }
 
-    /**
-     * Расширенный поиск (отдельная страница)
-     */
-    @GetMapping("/search-advanced")
-    public String advancedSearch(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) List<String> tags,
-            @RequestParam(required = false) String author,
-            @RequestParam(required = false) Boolean published,
-            Model model) {
-
-        try {
-            List<Article> articles = articleService.advancedSearch(title, tags, author, published);
-
-            model.addAttribute("articles", articles);
-            model.addAttribute("searchTitle", title != null ? title : "");
-            model.addAttribute("searchTags", tags != null ? String.join(",", tags) : "");
-            model.addAttribute("searchAuthor", author != null ? author : "");
-            model.addAttribute("searchPublished", published);
-            model.addAttribute("resultsCount", articles.size());
-
-        } catch (Exception e) {
-            model.addAttribute("error", "Ошибка при поиске: " + e.getMessage());
-            model.addAttribute("articles", new ArrayList<>());
-            model.addAttribute("resultsCount", 0);
-        }
-
-        return "search-advanced";
-    }
-
     @GetMapping("/api/tags")
     @ResponseBody
     public ResponseEntity<List<Tag>> searchTags(@RequestParam(required = false) String query) {
@@ -231,16 +260,33 @@ public class ArticleController {
         }
     }
 
-    // Обновленный метод createArticle для поддержки тегов
+    @GetMapping("/api/user/current")
+    @ResponseBody
+    public ResponseEntity<?> getCurrentUserInfo() {
+        try {
+            User currentUser = getCurrentUser();
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", currentUser.getId());
+            userInfo.put("username", currentUser.getName());
+            userInfo.put("email", currentUser.getEmail());
+            return ResponseEntity.ok(userInfo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    // Обновленный метод createArticle для поддержки рецензий
     @PostMapping("/create")
     @ResponseBody
+    @Transactional
     public ResponseEntity<?> createArticle(
             @RequestParam String title,
             @RequestParam String shortDescription,
             @RequestParam String blocks,
             @RequestParam(required = false) Long authorId,
             @RequestParam boolean isPublished,
-            @RequestParam(required = false) Set<String> tags) {
+            @RequestParam(required = false) Set<String> tags,
+            @RequestParam(required = false) Long reviewForArticleId) {
 
         try {
             User currentUser = getCurrentUser();
@@ -251,6 +297,14 @@ public class ArticleController {
                         .body("Вы можете создавать статьи только от своего имени");
             }
 
+            // Проверяем, не написал ли пользователь уже рецензию на эту статью
+            if (reviewForArticleId != null) {
+                if (articleService.hasUserReviewedArticle(currentUser, reviewForArticleId)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Вы уже написали рецензию на эту статью");
+                }
+            }
+
             List<ArticleBlock> articleBlocks = parseBlocksFromJson(blocks);
 
             Article article = articleService.createArticle(
@@ -259,14 +313,47 @@ public class ArticleController {
                     articleBlocks,
                     actualAuthorId,
                     isPublished,
-                    tags
+                    tags,
+                    reviewForArticleId
             );
 
-            return ResponseEntity.ok(article);
+            // Перезагружаем статью без ленивых коллекций для безопасной сериализации
+            Article freshArticle = articleRepository.findById(article.getId())
+                    .orElseThrow(() -> new RuntimeException("Статья не найдена после создания"));
+
+            // Создаем упрощенный объект для ответа
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", freshArticle.getId());
+            response.put("title", freshArticle.getTitle());
+            response.put("shortDescription", freshArticle.getShortDescription());
+            response.put("published", freshArticle.isPublished());
+            response.put("createdAt", freshArticle.getCreatedAt());
+            response.put("updatedAt", freshArticle.getUpdatedAt());
+            response.put("viewCount", freshArticle.getViewCount());
+
+            // Информация об авторе
+            if (freshArticle.getAuthor() != null) {
+                Map<String, Object> authorInfo = new HashMap<>();
+                authorInfo.put("id", freshArticle.getAuthor().getId());
+                authorInfo.put("name", freshArticle.getAuthor().getName());
+                response.put("author", authorInfo);
+            }
+
+            // Информация о рецензии (если это рецензия)
+            if (freshArticle.getReviewForArticle() != null) {
+                Map<String, Object> reviewInfo = new HashMap<>();
+                reviewInfo.put("id", freshArticle.getReviewForArticle().getId());
+                reviewInfo.put("title", freshArticle.getReviewForArticle().getTitle());
+                response.put("reviewForArticle", reviewInfo);
+            }
+
+            return ResponseEntity.ok(response);
+
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Ошибка аутентификации: " + e.getMessage());
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ошибка при создании статьи: " + e.getMessage());
         }

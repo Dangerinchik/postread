@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание рецензии</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .preview-section h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .preview-content {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .preview-block {
+            margin-bottom: 20px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            height: auto;
+        }
+
+        .text-preview {
+            padding: 20px;
+            line-height: 1.6;
+            height: auto;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            width: 100%;
+        }
+
+        .text-preview p {
+            margin-bottom: 1em;
+            word-wrap: break-word;
+        }
+
+        .text-preview b,
+        .text-preview strong {
+            font-weight: bold;
+        }
+
+        .text-preview i,
+        .text-preview em {
+            font-style: italic;
+        }
+
+        .text-preview u {
+            text-decoration: underline;
+        }
+
+        .text-preview center {
+            text-align: center;
+            display: block;
+        }
+
+        .text-preview right {
+            text-align: right;
+            display: block;
+        }
+
+        .text-preview justify {
+            text-align: justify;
+            display: block;
+        }
+
+        .media-preview {
+            text-align: center;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            height: auto;
+        }
+
+        .media-preview img,
+        .media-preview video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .blocks-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .blocks-info h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .file-info {
+            background-color: #d1ecf1;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .file-info h5 {
+            margin-bottom: 5px;
+            color: #0c5460;
+        }
+
+        .user-info {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .user-info h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .formatted-preview {
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            width: 100%;
+            height: auto;
+        }
+
+        .formatted-preview p {
+            margin-bottom: 1em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .formatted-preview b,
+        .formatted-preview strong {
+            font-weight: bold;
+        }
+
+        .formatted-preview i,
+        .formatted-preview em {
+            font-style: italic;
+        }
+
+        .formatted-preview u {
+            text-decoration: underline;
+        }
+
+        .formatted-preview center {
+            text-align: center;
+            display: block;
+        }
+
+        .formatted-preview right {
+            text-align: right;
+            display: block;
+        }
+
+        .formatted-preview justify {
+            text-align: justify;
+            display: block;
+        }
+
+        .formatted-preview {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .formatted-preview * {
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .empty-preview {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .tag-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tag-suggestion {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tag-suggestion:hover {
+            background-color: #f8f9fa;
+        }
+
+        .tag-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .tags-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tag-preview {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            display: inline-block;
+        }
+
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .article-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .article-tag:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .original-article-info {
+            background-color: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .original-article-info h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .original-article-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .original-article-link:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>✍️ Создание рецензии</h1>
+
+    <div class="original-article-info">
+        <h3>Рецензия на статью: <span id="originalArticleTitle">Загрузка...</span></h3>
+        <a href="#" id="originalArticleLink" class="original-article-link">📖 Перейти к оригинальной статье</a>
+    </div>
+
+    <form id="reviewForm">
+        <div class="user-info">
+            <h4>👤 Информация об авторе</h4>
+            <div id="userInfo">Загрузка информации о пользователе...</div>
+        </div>
+
+        <div class="form-group">
+            <label for="title">Заголовок рецензии *</label>
+            <input type="text" id="title" name="title"
+                   placeholder="Введите заголовок рецензии" required maxlength="255">
+            <div class="char-count"><span id="titleCount">0</span>/255</div>
+        </div>
+
+        <div class="form-group">
+            <label for="shortDescription">Краткое описание *</label>
+            <textarea id="shortDescription" name="shortDescription"
+                      placeholder="Введите краткое описание рецензии (максимум 500 символов)"
+                      required maxlength="500"></textarea>
+            <div class="char-count"><span id="descCount">0</span>/500</div>
+        </div>
+
+        <div class="form-group">
+            <label for="tags">Теги (максимум 3)</label>
+            <input type="text" id="tags" name="tags"
+                   placeholder="Введите теги через запятую или используйте #тег"
+                   maxlength="100">
+            <div class="char-count"><span id="tagsCount">0</span>/100</div>
+            <small style="color: #6c757d;">
+                Пример: #рецензия, #анализ, #критика. Максимум 3 тега.
+            </small>
+            <div id="tagSuggestions" class="tag-suggestions"></div>
+        </div>
+
+        <div class="tags-preview" id="tagsPreview">
+            <!-- Теги будут отображаться здесь -->
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="isPublished" name="isPublished">
+                <label for="isPublished">Опубликовать рецензию сразу</label>
+            </div>
+        </div>
+
+        <div class="blocks-info">
+            <h4>📋 Информация о блоках</h4>
+            <div id="blocksSummary">Загрузка информации о блоках...</div>
+        </div>
+
+        <div class="file-info">
+            <h5>📎 Информация о файлах</h5>
+            <div id="filesInfo">Файлы уже загружены и готовы к сохранению</div>
+        </div>
+
+        <div class="preview-section">
+            <h3>Предпросмотр рецензии</h3>
+            <div id="contentPreview" class="preview-content">
+                <!-- Блоки будут добавлены через JavaScript -->
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" class="btn btn-secondary" onclick="goBack()">← Назад к редактору</button>
+            <button type="button" class="btn btn-primary" onclick="saveReview()">💾 Сохранить рецензию</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let currentUserId = null;
+    let currentUsername = null;
+    let originalArticleId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Проверяем аутентификацию и получаем информацию о пользователе
+        checkAuthentication();
+
+        // Получаем ID оригинальной статьи из sessionStorage
+        originalArticleId = sessionStorage.getItem('reviewForArticleId');
+        if (!originalArticleId) {
+            alert('Нет данных об оригинальной статье. Вернитесь в редактор.');
+            goBack();
+            return;
+        }
+
+        // Загружаем информацию об оригинальной статье
+        fetch(`/articles/api/${originalArticleId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки статьи');
+                }
+                return response.json();
+            })
+            .then(article => {
+                document.getElementById('originalArticleTitle').textContent = article.title;
+                document.getElementById('originalArticleLink').href = `/articles/${article.id}`;
+            })
+            .catch(error => {
+                console.error('Error loading article:', error);
+                alert('Ошибка загрузки информации о статье');
+            });
+
+        // Загружаем блоки из sessionStorage
+        const blocksJson = sessionStorage.getItem('articleBlocks');
+        if (blocksJson) {
+            try {
+                const blocks = JSON.parse(blocksJson);
+                displayPreview(blocks);
+                updateBlocksSummary(blocks);
+                updateFilesInfo(blocks);
+            } catch (error) {
+                console.error('Error parsing blocks:', error);
+                alert('Ошибка при загрузке блоков');
+            }
+        } else {
+            alert('Нет данных о блоках рецензии. Вернитесь в редактор.');
+            goBack();
+        }
+
+        // Обработчики для полей формы
+        document.getElementById('title').addEventListener('input', function() {
+            document.getElementById('titleCount').textContent = this.value.length;
+        });
+
+        document.getElementById('shortDescription').addEventListener('input', function() {
+            document.getElementById('descCount').textContent = this.value.length;
+        });
+
+        document.getElementById('tags').addEventListener('input', function(e) {
+            const tagsText = e.target.value;
+            document.getElementById('tagsCount').textContent = tagsText.length;
+
+            if (tagsText.length > 1) {
+                searchTagSuggestions(tagsText);
+            } else {
+                clearTagSuggestions();
+            }
+
+            updateTagsPreview(tagsText);
+        });
+
+        // Инициализация счетчиков
+        document.getElementById('titleCount').textContent = document.getElementById('title').value.length;
+        document.getElementById('descCount').textContent = document.getElementById('shortDescription').value.length;
+    });
+
+    // Функция проверки аутентификации и получения информации о пользователе
+    async function checkAuthentication() {
+        try {
+            const response = await fetch('/secured/user');
+            if (response.ok) {
+                const username = await response.text();
+                currentUsername = username;
+                await getUserInfo();
+            } else {
+                window.location.href = '/auth/login';
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            window.location.href = '/auth/login';
+        }
+    }
+
+    // Получаем информацию о пользователе
+    async function getUserInfo() {
+        try {
+            const response = await fetch('/articles/api/user/current');
+            if (response.ok) {
+                const userData = await response.json();
+                currentUserId = userData.id;
+                currentUsername = userData.username;
+                updateUserInfo();
+            } else {
+                throw new Error('Failed to get user info');
+            }
+        } catch (error) {
+            console.error('Failed to get user info:', error);
+            updateUserInfoFromSession();
+        }
+    }
+
+    function updateUserInfo() {
+        const userInfo = document.getElementById('userInfo');
+        if (currentUserId && currentUsername) {
+            userInfo.innerHTML = `
+                Автор: <strong>${currentUsername}</strong><br>
+                ID пользователя: <strong>${currentUserId}</strong>
+            `;
+        } else {
+            userInfo.innerHTML = 'Не удалось загрузить информацию о пользователе';
+        }
+    }
+
+    function updateUserInfoFromSession() {
+        const userInfo = document.getElementById('userInfo');
+        userInfo.innerHTML = `
+            Автор: <strong>${currentUsername || 'Текущий пользователь'}</strong><br>
+            <small>ID будет определен автоматически при сохранении</small>
+        `;
+    }
+
+    function displayPreview(blocks) {
+        const preview = document.getElementById('contentPreview');
+        preview.innerHTML = '';
+
+        if (blocks.length === 0) {
+            preview.innerHTML = '<div class="empty-preview">Нет блоков для отображения</div>';
+            return;
+        }
+
+        blocks.forEach((block, index) => {
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'preview-block';
+
+            let content = '';
+            if (block.type === 'text') {
+                content = `
+                    <div class="text-preview formatted-preview">${block.content}</div>
+                `;
+            } else if (block.type === 'media') {
+                const isUploadedFile = block.content &&
+                    (block.content.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov|mp3|wav)$/i) ||
+                        block.content.length === 36 + 4);
+
+                if (isUploadedFile) {
+                    content = `
+                        <div class="media-preview">
+                            <strong>Файл:</strong> ${block.content}
+                            <br><small style="color: #28a745;">✓ Файл успешно загружен на сервер</small>
+                        </div>
+                    `;
+                } else {
+                    content = `
+                        <div class="media-preview">
+                            <strong>Файл:</strong> ${block.content}
+                        </div>
+                    `;
+                }
+            }
+
+            blockDiv.innerHTML = content;
+            preview.appendChild(blockDiv);
+        });
+
+        setTimeout(() => {
+            const textPreviews = preview.querySelectorAll('.text-preview');
+            textPreviews.forEach(preview => {
+                adjustPreviewHeight(preview);
+            });
+        }, 100);
+    }
+
+    function adjustPreviewHeight(element) {
+        element.style.height = 'auto';
+        const newHeight = element.scrollHeight;
+        element.style.height = newHeight + 'px';
+        handleLongWordsInPreview(element);
+    }
+
+    function handleLongWordsInPreview(element) {
+        const text = element.innerText || element.textContent;
+        const words = text.split(/\s+/);
+        const veryLongWords = words.filter(word => word.length > 30);
+
+        if (veryLongWords.length > 0) {
+            console.log('В предпросмотре обнаружены очень длинные слова:', veryLongWords);
+        }
+    }
+
+    function updateBlocksSummary(blocks) {
+        const summary = document.getElementById('blocksSummary');
+        const textBlocks = blocks.filter(block => block.type === 'text').length;
+        const mediaBlocks = blocks.filter(block => block.type === 'media').length;
+
+        summary.innerHTML = `
+            Всего блоков: <strong>${blocks.length}</strong><br>
+            Текстовых блоков: <strong>${textBlocks}</strong><br>
+            Медиа блоков: <strong>${mediaBlocks}</strong>
+        `;
+    }
+
+    function updateFilesInfo(blocks) {
+        const filesInfo = document.getElementById('filesInfo');
+        const mediaBlocks = blocks.filter(block => block.type === 'media');
+        const uploadedFiles = mediaBlocks.filter(block =>
+            block.content &&
+            (block.content.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mov|mp3|wav)$/i) ||
+                block.content.length === 36 + 4)
+        );
+
+        if (mediaBlocks.length === 0) {
+            filesInfo.innerHTML = 'Медиа-файлы не добавлены';
+        } else if (uploadedFiles.length === mediaBlocks.length) {
+            filesInfo.innerHTML = `
+                Все файлы загружены: <strong>${uploadedFiles.length}</strong> из <strong>${mediaBlocks.length}</strong>
+                <br><small style="color: #28a745;">✓ Все файлы успешно загружены на сервер</small>
+            `;
+        } else {
+            filesInfo.innerHTML = `
+                Загружено файлов: <strong>${uploadedFiles.length}</strong> из <strong>${mediaBlocks.length}</strong>
+                <br><small style="color: #dc3545;">⚠ Некоторые файлы могут не отображаться корректно</small>
+            `;
+        }
+    }
+
+    async function saveReview() {
+        const title = document.getElementById('title').value;
+        const shortDescription = document.getElementById('shortDescription').value;
+        const isPublished = document.getElementById('isPublished').checked;
+        const tagsText = document.getElementById('tags').value;
+
+        // Извлекаем теги из текста
+        const tags = extractTagsFromText(tagsText);
+
+        // Валидация формы
+        if (!title.trim()) {
+            alert('Введите заголовок рецензии');
+            return;
+        }
+
+        if (!shortDescription.trim()) {
+            alert('Введите краткое описание рецензии');
+            return;
+        }
+
+        // Получаем блоки из sessionStorage
+        const blocksJson = sessionStorage.getItem('articleBlocks');
+        if (!blocksJson) {
+            alert('Нет данных о блоках рецензии');
+            return;
+        }
+
+        // Показываем индикатор загрузки
+        const saveBtn = document.querySelector('.btn-primary');
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Сохранение...';
+        saveBtn.disabled = true;
+        document.body.classList.add('loading');
+
+        try {
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('shortDescription', shortDescription);
+            formData.append('blocks', blocksJson);
+            formData.append('isPublished', isPublished.toString());
+            formData.append('reviewForArticleId', originalArticleId);
+
+            // Добавляем теги
+            tags.forEach(tag => {
+                formData.append('tags', tag);
+            });
+
+            const response = await fetch('/articles/create', {
+                method: 'POST',
+                body: formData
+            });
+
+            const responseText = await response.text();
+
+            if (response.ok) {
+                try {
+                    const result = JSON.parse(responseText);
+                    alert('Рецензия успешно сохранена!');
+                    sessionStorage.removeItem('articleBlocks');
+                    sessionStorage.removeItem('reviewForArticleId');
+                    window.location.href = '/articles/' + result.id;
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    alert('Рецензия сохранена, но произошла ошибка при обработке ответа');
+                    window.location.href = '/articles';
+                }
+            } else {
+                let errorMessage = 'Ошибка при сохранении рецензии';
+                try {
+                    const errorData = JSON.parse(responseText);
+                    errorMessage = errorData.message || errorData || errorMessage;
+                } catch (e) {
+                    errorMessage = responseText || errorMessage;
+                }
+                alert(errorMessage);
+
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при сохранении рецензии: ' + error.message);
+        } finally {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+            document.body.classList.remove('loading');
+        }
+    }
+
+    function goBack() {
+        window.location.href = `/articles/editor/${originalArticleId}`;
+    }
+
+    // Функции для работы с тегами
+    function extractTagsFromText(text) {
+        if (!text) return [];
+
+        const tagPattern = /#(\w+)/g;
+        const matches = text.match(tagPattern);
+
+        if (!matches) return [];
+
+        return matches.map(match => match.substring(1))
+            .slice(0, 3);
+    }
+
+    async function searchTagSuggestions(query) {
+        try {
+            const response = await fetch(`/articles/api/tags?query=${encodeURIComponent(query)}`);
+            if (response.ok) {
+                const tags = await response.json();
+                displayTagSuggestions(tags);
+            }
+        } catch (error) {
+            console.error('Error fetching tag suggestions:', error);
+        }
+    }
+
+    function displayTagSuggestions(tags) {
+        const suggestionsContainer = document.getElementById('tagSuggestions');
+        suggestionsContainer.innerHTML = '';
+
+        if (tags.length === 0) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+
+        suggestionsContainer.style.display = 'block';
+
+        tags.forEach(tag => {
+            const suggestion = document.createElement('div');
+            suggestion.className = 'tag-suggestion';
+            suggestion.textContent = `#${tag.name}`;
+            suggestion.onclick = () => {
+                addTagToInput(tag.name);
+            };
+            suggestionsContainer.appendChild(suggestion);
+        });
+    }
+
+    function addTagToInput(tagName) {
+        const tagsInput = document.getElementById('tags');
+        const currentTags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+        if (currentTags.length >= 3) {
+            alert('Максимум 3 тега на рецензию');
+            return;
+        }
+
+        if (!currentTags.includes(tagName)) {
+            currentTags.push(tagName);
+            tagsInput.value = currentTags.join(', ');
+            updateTagsPreview(tagsInput.value);
+        }
+
+        clearTagSuggestions();
+        tagsInput.focus();
+    }
+
+    function updateTagsPreview(tagsText) {
+        const previewContainer = document.getElementById('tagsPreview');
+        const tags = extractTagsFromText(tagsText);
+
+        previewContainer.innerHTML = '';
+
+        if (tags.length === 0) {
+            previewContainer.innerHTML = '<div class="empty-preview">Теги не добавлены</div>';
+            return;
+        }
+
+        tags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag-preview';
+            tagElement.textContent = `#${tag}`;
+            previewContainer.appendChild(tagElement);
+        });
+    }
+
+    function clearTagSuggestions() {
+        const suggestionsContainer = document.getElementById('tagSuggestions');
+        suggestionsContainer.innerHTML = '';
+        suggestionsContainer.style.display = 'none';
+    }
+
+    window.addEventListener('resize', function() {
+        const textPreviews = document.querySelectorAll('.text-preview');
+        textPreviews.forEach(preview => {
+            adjustPreviewHeight(preview);
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,80 +1,80 @@
 package com.postread.repositories;
 
 import com.postread.data.Article;
-import com.postread.data.Tag;
+import com.postread.data.ArticleBlock;
+import com.postread.security.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
+        // Существующие методы
         List<Article> findAllByPublishedTrueOrderByCreatedAtDesc();
-
         List<Article> findByTitleContainingIgnoreCaseAndPublishedTrue(String title);
 
-        // Поиск по тегам (хотя бы один тег совпадает) - ИСПРАВЛЕННЫЙ ЗАПРОС
-        @Query("SELECT DISTINCT a FROM Article a " +
-                "JOIN a.tags t " +
-                "WHERE a.published = true AND t.name IN :tagNames")
-        List<Article> findByTagsAndPublishedTrue(@Param("tagNames") List<String> tagNames);
+        // Методы для поиска по тегам
+        @Query("SELECT DISTINCT a FROM Article a JOIN a.tags t WHERE t.name IN :tagNames AND a.published = true")
+        List<Article> findByTagsNameInAndPublishedTrue(@Param("tagNames") List<String> tagNames);
 
-        // Поиск по названию и тегам - ИСПРАВЛЕННЫЙ ЗАПРОС
-        @Query("SELECT DISTINCT a FROM Article a " +
-                "JOIN a.tags t " +
-                "WHERE a.published = true " +
-                "AND (LOWER(a.title) LIKE LOWER(CONCAT('%', :title, '%')) " +
-                "AND t.name IN :tagNames)")
-        List<Article> findByTitleContainingAndTagsAndPublishedTrue(
+        @Query("SELECT DISTINCT a FROM Article a JOIN a.tags t WHERE a.title LIKE %:title% AND t.name IN :tagNames AND a.published = true")
+        List<Article> findByTitleContainingIgnoreCaseAndTagsNameInAndPublishedTrue(
                 @Param("title") String title,
                 @Param("tagNames") List<String> tagNames);
 
-        List<Article> findByAuthorId(Long authorId);
+        // Новые методы для работы с рецензиями
+        List<Article> findByReviewForArticleAndPublishedTrueOrderByCreatedAtDesc(Article article);
+        boolean existsByAuthorAndReviewForArticle(User author, Article reviewForArticle);
 
-        @Query("SELECT a FROM Article a WHERE a.published = true AND a.author.id = :authorId")
-        List<Article> findPublishedByAuthorId(@Param("authorId") Long authorId);
+        // Метод для поиска статей (не рецензий)
+        @Query("SELECT a FROM Article a WHERE a.reviewForArticle IS NULL AND a.published = true ORDER BY a.createdAt DESC")
+        List<Article> findAllOriginalArticles();
 
-        @Query("SELECT a FROM Article a WHERE a.published = false AND a.author.id = :authorId")
-        List<Article> findDraftsByAuthorId(@Param("authorId") Long authorId);
+        // Метод для поиска рецензий пользователя
+        List<Article> findByAuthorAndReviewForArticleIsNotNullOrderByCreatedAtDesc(User author);
 
-        // Новые методы для расширенного поиска
-        @Query("SELECT a FROM Article a " +
-                "WHERE LOWER(a.title) LIKE LOWER(CONCAT('%', :title, '%')) " +
-                "AND a.published = :published " +
-                "ORDER BY a.createdAt DESC")
-        List<Article> findByTitleContainingIgnoreCaseAndPublished(@Param("title") String title,
-                                                                  @Param("published") Boolean published);
+        // Стандартный метод поиска по ID
+        Optional<Article> findById(Long id);
 
-        @Query("SELECT DISTINCT a FROM Article a " +
-                "JOIN a.tags t " +
-                "WHERE t IN :tags " +
-                "AND a.published = :published " +
-                "ORDER BY a.createdAt DESC")
-        List<Article> findByTagsInAndPublished(@Param("tags") Set<Tag> tags,
-                                               @Param("published") Boolean published);
+        List<Article> findByAuthorId(Long id);
 
-        @Query("SELECT DISTINCT a FROM Article a " +
-                "JOIN a.tags t " +
-                "WHERE LOWER(a.title) LIKE LOWER(CONCAT('%', :title, '%')) " +
-                "AND t IN :tags " +
-                "AND a.published = :published " +
-                "ORDER BY a.createdAt DESC")
-        List<Article> findByTitleContainingAndTagsInAndPublished(@Param("title") String title,
-                                                                 @Param("tags") Set<Tag> tags,
-                                                                 @Param("published") Boolean published);
+        // Безопасные методы для работы с рецензиями
+        @Query("SELECT COUNT(r) FROM Article r WHERE r.reviewForArticle.id = :articleId AND r.published = true")
+        int countReviewsByArticleId(@Param("articleId") Long articleId);
 
-        @Query("SELECT a FROM Article a " +
-                "JOIN a.author author " +
-                "WHERE LOWER(author.name) LIKE LOWER(CONCAT('%', :authorName, '%')) " +
-                "AND a.published = :published " +
-                "ORDER BY a.createdAt DESC")
-        List<Article> findByAuthorNameContainingIgnoreCaseAndPublished(@Param("authorName") String authorName,
-                                                                       @Param("published") Boolean published);
+        @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Article r WHERE r.reviewForArticle.id = :articleId AND r.published = true")
+        boolean existsReviewsByArticleId(@Param("articleId") Long articleId);
 
-        @Query("SELECT a FROM Article a WHERE a.published = :published ORDER BY a.createdAt DESC")
-        List<Article> findByPublished(@Param("published") Boolean published);
+        // Исправленные методы для загрузки статьи с инициализированными блоками
+        @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.blocks b WHERE a.id = :id ORDER BY b.order ASC")
+        Optional<Article> findByIdWithBlocks(@Param("id") Long id);
+
+        // Исправленный метод для загрузки статьи с инициализированными данными
+        @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.author LEFT JOIN FETCH a.tags LEFT JOIN FETCH a.blocks b WHERE a.id = :id ORDER BY b.order ASC")
+        Optional<Article> findByIdWithAuthorAndTagsAndBlocks(@Param("id") Long id);
+
+        // Метод для загрузки без блоков (исправленное имя)
+        @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.author LEFT JOIN FETCH a.tags WHERE a.id = :id")
+        Optional<Article> findByIdWithAuthorAndTags(@Param("id") Long id);
+
+        // Метод для загрузки блоков отдельным запросом
+        @Query("SELECT b FROM ArticleBlock b WHERE b.article.id = :articleId ORDER BY b.order ASC")
+        List<ArticleBlock> findBlocksByArticleId(@Param("articleId") Long articleId);
+
+        // Метод для увеличения счетчика просмотров
+        @Modifying
+        @Transactional
+        @Query("UPDATE Article a SET a.viewCount = a.viewCount + 1 WHERE a.id = :articleId")
+        void incrementViewCount(@Param("articleId") Long articleId);
+
+        // Дополнительный метод для получения статьи только с автором
+        @Query("SELECT a FROM Article a LEFT JOIN FETCH a.author WHERE a.id = :id")
+        Optional<Article> findByIdWithAuthor(@Param("id") Long id);
 }

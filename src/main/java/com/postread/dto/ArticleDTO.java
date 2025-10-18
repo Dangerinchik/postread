@@ -1,19 +1,46 @@
 package com.postread.dto;
 
 import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Data
 public class ArticleDTO {
     private Long id;
     private String title;
     private String shortDescription;
-    private UserDTO author;
-    private boolean isPublished;
+    private UserSimpleDTO author;
+    private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private int viewCount;
-    private List<ArticleBlockDTO> blocks; // Добавляем список блоков
+    private List<ArticleBlockDTO> blocks;
+    private Set<TagDTO> tags;
+
+    // Исправленные поля для рецензий
+    private boolean review; // измените с isReview на review
+    private ArticleSimpleDTO reviewForArticle;
+    private int reviewsCount;
+    private boolean hasReviews;
+
+    public ArticleDTO() {}
+
+    // Добавьте геттер для review (Thymeleaf использует геттеры)
+    public boolean isReview() {
+        return review;
+    }
+
+    public void setReview(boolean review) {
+        this.review = review;
+    }
+
+    // Геттер для совместимости (если где-то используется isReview)
+    public boolean getIsReview() {
+        return review;
+    }
+
+    public void setIsReview(boolean review) {
+        this.review = review;
+    }
 }

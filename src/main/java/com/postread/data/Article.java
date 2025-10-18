@@ -1,6 +1,7 @@
 package com.postread.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ import com.postread.security.User;
 @Table(name = "articles")
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,7 +53,6 @@ public class Article {
     @JsonIgnore
     private List<ArticleBlock> blocks = new ArrayList<>();
 
-    // Простая связь ManyToMany с тегами - используем EAGER для избежания LazyInitializationException
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "articles_tags",
@@ -62,7 +63,19 @@ public class Article {
     private Set<Tag> tags = new HashSet<>();
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Reaction> reactions = new HashSet<>();
+
+    // Новое поле: если не null, то это рецензия на указанную статью
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "review_for_article_id")
+    @JsonIgnoreProperties({"reviews", "blocks", "reactions", "tags"})
+    private Article reviewForArticle;
+
+    // Связь для получения всех рецензий на эту статью
+    @OneToMany(mappedBy = "reviewForArticle", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<Article> reviews = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -75,8 +88,15 @@ public class Article {
         updatedAt = LocalDateTime.now();
     }
 
-    // Вспомогательный метод для проверки наличия тегов (без доступа к коллекции)
     public boolean hasTags() {
         return tags != null && !tags.isEmpty();
     }
+
+    // Вспомогательный метод для проверки, является ли статья рецензией
+    public boolean isReview() {
+        return reviewForArticle != null;
+    }
+
+    // Убраны проблемные методы getReviewsCount() и hasReviews()
+    // Вместо них используем безопасные методы в сервисе
 }

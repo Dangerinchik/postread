@@ -9,10 +9,10 @@ public class ArticleResponse {
     private Long id;
     private String title;
     private String shortDescription;
-    private UserDTO author;
+    private UserDTODeprecated author;
     private boolean isPublished;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private int viewCount;
-    private List<ArticleBlockDTO> blocks;
+    private List<ArticleBlockDTODeprecated> blocks;
 }

@@ -240,6 +240,15 @@
             background-color: #545b62;
         }
 
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
         .formatted-text {
             line-height: 1.6;
             word-wrap: break-word;
@@ -437,23 +446,162 @@
         .btn-remove-reaction:hover {
             background-color: #545b62;
         }
+
+        /* Стили для рецензий */
+        .review-info {
+            background-color: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #3498db;
+        }
+
+        .review-info h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .original-article-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .original-article-link:hover {
+            background-color: #2980b9;
+        }
+
+        .reviews-section {
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .reviews-section h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.4em;
+        }
+
+        .review-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .review-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .review-preview h4 {
+            margin-bottom: 10px;
+        }
+
+        .review-preview h4 a {
+            color: #2c3e50;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .review-preview h4 a:hover {
+            color: #3498db;
+        }
+
+        .review-meta {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .article-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .article-tag:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success-message {
+            background-color: #d1edff;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+        }
     </style>
 </head>
 <body>
 <div class="container">
+    <!-- Блок информации о рецензии (показывается только если это рецензия) -->
+    <div class="review-info" th:if="${article.review}">
+        <h3>✍️ Это рецензия на статью</h3>
+        <p>Данная статья является рецензией на оригинальную работу:</p>
+        <a th:href="@{/articles/{id}(id=${article.reviewForArticle.id})}"
+           class="original-article-link"
+           th:text="${article.reviewForArticle.title}">
+            Оригинальная статья
+        </a>
+    </div>
+
     <div class="header">
         <h1 class="article-title" th:text="${article.title}">Название статьи</h1>
 
         <div class="article-meta">
             <div class="author-info">
                 <div class="author-avatar"
-                     th:style="${article.author.icon != null && !article.author.icon.isEmpty()} ?
-                               'background-image: url(' + ${article.author.icon} + ')' : ''"
-                     th:text="${(article.author.icon == null || article.author.icon.isEmpty()) ?
-                              #strings.substring(article.author.name, 0, 1) : ''}">
+                     th:if="${article.author != null and article.author.icon != null and !article.author.icon.isEmpty()}"
+                     th:style="'background-image: url(' + ${article.author.icon} + ')'">
+                </div>
+                <div class="author-avatar"
+                     th:unless="${article.author != null and article.author.icon != null and !article.author.icon.isEmpty()}"
+                     th:text="${article.author != null ? #strings.substring(article.author.name, 0, 1) : 'A'}">
                 </div>
                 <div class="author-details">
-                    <div class="author-name" th:text="${article.author.name}">Автор</div>
+                    <div class="author-name" th:text="${article.author != null ? article.author.name : 'Неизвестный автор'}">Автор</div>
                     <div class="author-date" th:text="${#temporals.format(article.createdAt, 'dd.MM.yyyy HH:mm')}">Дата публикации</div>
                 </div>
             </div>
@@ -472,8 +620,8 @@
         Краткое описание статьи...
     </div>
 
-    <!-- Добавляем после краткого описания -->
-    <div class="article-tags" th:if="${article.hasTags()}">
+    <!-- Теги статьи -->
+    <div class="article-tags" th:if="${article.tags != null and !article.tags.isEmpty()}">
         <th:block th:each="tag : ${article.tags}">
             <a th:href="@{/articles/search-advanced(tags=${tag.name})}"
                class="article-tag" th:text="'#' + ${tag.name}">
@@ -484,78 +632,88 @@
 
     <!-- Отображаем блоки статьи -->
     <div class="article-blocks">
-        <div th:if="${#lists.isEmpty(article.blocks)}" class="no-blocks-message">
+        <!-- Отладочная информация -->
+        <div th:if="${article.blocks == null}" class="no-blocks-message">
+            <h3>Блоки не загружены (null)</h3>
+            <p>Проверьте настройки DTO и сервиса</p>
+            <p>Отладочная информация в консоли сервера</p>
+        </div>
+
+        <div th:if="${article.blocks != null and article.blocks.isEmpty()}" class="no-blocks-message">
             <h3>В статье пока нет содержимого</h3>
             <p>Эта статья была создана, но в ней еще нет текста или медиафайлов.</p>
         </div>
 
-        <div th:each="block : ${article.blocks}"
-             th:classappend="'block ' + ${block.type} + '-block'">
+        <div th:if="${article.blocks != null and !article.blocks.isEmpty()}">
+            <div th:each="block : ${article.blocks}"
+                 th:classappend="'block ' + ${block.type} + '-block'">
 
-            <div th:switch="${block.type}">
-
-                <div th:case="'text'" class="text-content">
-                    <div class="formatted-text" th:utext="${block.content}">Текст блока</div>
-                </div>
-
-                <!-- Медиа блок -->
-                <div th:case="'media'" class="media-content-wrapper">
-                    <div th:if="${#strings.endsWith(block.content, '.jpg') or
-                 #strings.endsWith(block.content, '.jpeg') or
-                 #strings.endsWith(block.content, '.png') or
-                 #strings.endsWith(block.content, '.gif') or
-                 #strings.endsWith(block.content, '.svg') or
-                 #strings.endsWith(block.content, '.webp')}">
-                        <img th:src="@{'/uploads/' + ${block.content}}"
-                             th:alt="${'Изображение: ' + block.content}"
-                             style="max-width: 100%; height: auto;"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div class="file-not-found" style="display: none;">
-                            ❌ Файл не найден: <span th:text="${block.content}"></span>
+                <div th:switch="${block.type}">
+                    <div th:case="'text'" class="text-content">
+                        <div class="formatted-text" th:utext="${block.content}">
+                            Текст блока
                         </div>
                     </div>
-                    <div th:if="${#strings.endsWith(block.content, '.mp4') or
-                 #strings.endsWith(block.content, '.webm') or
-                 #strings.endsWith(block.content, '.ogg') or
-                 #strings.endsWith(block.content, '.mov')}">
-                        <video th:src="@{'/uploads/' + ${block.content}}"
-                               controls
-                               style="max-width: 100%; height: auto;"
-                               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            Ваш браузер не поддерживает видео.
-                        </video>
-                        <div class="file-not-found" style="display: none;">
-                            ❌ Видеофайл не найден: <span th:text="${block.content}"></span>
+
+                    <!-- Медиа блок -->
+                    <div th:case="'media'" class="media-content-wrapper">
+                        <div th:if="${#strings.contains(block.content, '.jpg') or
+                                     #strings.contains(block.content, '.jpeg') or
+                                     #strings.contains(block.content, '.png') or
+                                     #strings.contains(block.content, '.gif') or
+                                     #strings.contains(block.content, '.svg') or
+                                     #strings.contains(block.content, '.webp')}">
+                            <img th:src="@{'/uploads/' + ${block.content}}"
+                                 th:alt="${'Изображение: ' + block.content}"
+                                 style="max-width: 100%; height: auto;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="file-not-found" style="display: none;">
+                                ❌ Файл не найден: <span th:text="${block.content}"></span>
+                            </div>
                         </div>
-                    </div>
-                    <div th:if="${#strings.endsWith(block.content, '.mp3') or
-                 #strings.endsWith(block.content, '.wav') or
-                 #strings.endsWith(block.content, '.ogg')}">
-                        <audio th:src="@{'/uploads/' + ${block.content}}"
-                               controls
-                               style="width: 100%;"
-                               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            Ваш браузер не поддерживает аудио.
-                        </audio>
-                        <div class="file-not-found" style="display: none;">
-                            ❌ Аудиофайл не найден: <span th:text="${block.content}"></span>
+                        <div th:if="${#strings.contains(block.content, '.mp4') or
+                                     #strings.contains(block.content, '.webm') or
+                                     #strings.contains(block.content, '.ogg') or
+                                     #strings.contains(block.content, '.mov')}">
+                            <video th:src="@{'/uploads/' + ${block.content}}"
+                                   controls
+                                   style="max-width: 100%; height: auto;"
+                                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                Ваш браузер не поддерживает видео.
+                            </video>
+                            <div class="file-not-found" style="display: none;">
+                                ❌ Видеофайл не найден: <span th:text="${block.content}"></span>
+                            </div>
                         </div>
-                    </div>
-                    <div th:if="${not (#strings.endsWith(block.content, '.jpg') or
-                      #strings.endsWith(block.content, '.jpeg') or
-                      #strings.endsWith(block.content, '.png') or
-                      #strings.endsWith(block.content, '.gif') or
-                      #strings.endsWith(block.content, '.svg') or
-                      #strings.endsWith(block.content, '.webp') or
-                      #strings.endsWith(block.content, '.mp4') or
-                      #strings.endsWith(block.content, '.webm') or
-                      #strings.endsWith(block.content, '.ogg') or
-                      #strings.endsWith(block.content, '.mov') or
-                      #strings.endsWith(block.content, '.mp3') or
-                      #strings.endsWith(block.content, '.wav'))}">
-                        <div class="media-caption">
-                            <strong>Файл:</strong> <span th:text="${block.content}">Путь к файлу</span>
-                            <br><small>Неизвестный тип файла или файл не загружен</small>
+                        <div th:if="${#strings.contains(block.content, '.mp3') or
+                                     #strings.contains(block.content, '.wav') or
+                                     #strings.contains(block.content, '.ogg')}">
+                            <audio th:src="@{'/uploads/' + ${block.content}}"
+                                   controls
+                                   style="width: 100%;"
+                                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                Ваш браузер не поддерживает аудио.
+                            </audio>
+                            <div class="file-not-found" style="display: none;">
+                                ❌ Аудиофайл не найден: <span th:text="${block.content}"></span>
+                            </div>
+                        </div>
+                        <div th:if="${not (#strings.contains(block.content, '.jpg') or
+                                          #strings.contains(block.content, '.jpeg') or
+                                          #strings.contains(block.content, '.png') or
+                                          #strings.contains(block.content, '.gif') or
+                                          #strings.contains(block.content, '.svg') or
+                                          #strings.contains(block.content, '.webp') or
+                                          #strings.contains(block.content, '.mp4') or
+                                          #strings.contains(block.content, '.webm') or
+                                          #strings.contains(block.content, '.ogg') or
+                                          #strings.contains(block.content, '.mov') or
+                                          #strings.contains(block.content, '.mp3') or
+                                          #strings.contains(block.content, '.wav'))}">
+                            <div class="media-caption">
+                                <strong>Файл:</strong> <span th:text="${block.content}">Путь к файлу</span>
+                                <br><small>Неизвестный тип файла или файл не загружен</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -578,7 +736,7 @@
         <h3>Реакции</h3>
 
         <div class="reactions-stats" id="reactionsStats">
-            <!-- Статистика будет загружена через JavaScript -->
+            <p style="color: #6c757d; font-style: italic;">Загрузка реакций...</p>
         </div>
 
         <div class="reactions-actions">
@@ -603,17 +761,49 @@
         </div>
     </div>
 
+    <!-- Секция рецензий (показывается только для оригинальных статей) -->
+    <div class="reviews-section" th:if="${not article.review and article.hasReviews}">
+        <h3>📝 Рецензии на эту статью</h3>
+        <div id="reviewsList" class="reviews-list">
+            <p style="color: #6c757d; font-style: italic;">Загрузка рецензий...</p>
+        </div>
+<!--        <a th:href="@{/articles/{id}/reviews(id=${article.id})}" class="btn btn-secondary">-->
+<!--            📖 Все рецензии (<span th:text="${article.reviewsCount}">0</span>)-->
+<!--        </a>-->
+    </div>
+
     <div class="actions">
         <a th:href="@{/articles/search}" class="btn btn-secondary">🔍 Поиск другой статьи</a>
         <a th:href="@{/articles}" class="btn btn-secondary">📚 Все статьи</a>
+
+        <!-- Кнопка "Написать рецензию" показывается только для оригинальных статей -->
+        <a th:if="${not article.review}"
+           th:href="@{'/articles/editor/' + ${article.id}}"
+           class="btn btn-primary">✍️ Написать рецензию</a>
+
+        <!-- Кнопка "Перейти к оригиналу" показывается только для рецензий -->
+        <a th:if="${article.review}"
+           th:href="@{/articles/{id}(id=${article.reviewForArticle.id})}"
+           class="btn btn-primary">📖 Перейти к оригиналу</a>
+
         <a th:href="@{'/articles/edit/' + ${article.id}}" class="btn btn-edit">✏️ Редактировать</a>
         <a th:href="@{'/articles/delete/' + ${article.id}}" class="btn btn-delete">🗑️ Удалить</a>
     </div>
 </div>
 
 <script>
-    // Обработка ошибок загрузки медиафайлов
     document.addEventListener('DOMContentLoaded', function() {
+        const articleId = [[${article.id}]];
+
+        // Загружаем реакции
+        loadReactionStats(articleId);
+
+        // Загружаем рецензии (только для оригинальных статей)
+        if (![[${article.review}]]) {
+            loadArticleReviews(articleId);
+        }
+
+        // Обработка ошибок загрузки медиафайлов
         const mediaElements = document.querySelectorAll('img, video, audio');
         mediaElements.forEach(element => {
             element.addEventListener('error', function() {
@@ -626,195 +816,255 @@
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const articleId = [[${article.id}]];
+    // Функции для работы с реакциями
+    let currentUserReaction = null;
+
+    const emojiToCode = {
+        '👍': 1, '👎': 2, '❤️': 3, '😂': 4,
+        '😢': 5, '😠': 6, '😮': 7, '🔥': 8,
+        '🤔': 9, '👏': 10, '😕': 11, '🎉': 12
+    };
+
+    const codeToEmoji = {
+        1: '👍', 2: '👎', 3: '❤️', 4: '😂',
+        5: '😢', 6: '😠', 7: '😮', 8: '🔥',
+        9: '🤔', 10: '👏', 11: '😕', 12: '🎉'
+    };
+
+    async function loadReactionStats(articleId) {
+        try {
+            const response = await fetch(`/api/reactions/article/${articleId}/stats`, {
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            updateReactionsDisplay(data);
+        } catch (error) {
+            console.error('Ошибка загрузки статистики реакций:', error);
+            showReactionsError('Не удалось загрузить реакции');
+        }
+    }
+
+    function showReactionsError(message) {
         const reactionsContainer = document.getElementById('reactionsStats');
+        reactionsContainer.innerHTML = `<div class="error-message">${message}</div>`;
+    }
+
+    function updateReactionsDisplay(data) {
+        const stats = data.stats;
+        currentUserReaction = data.userReaction;
+
+        // Обновляем статистику
+        const reactionsContainer = document.getElementById('reactionsStats');
+        let statsHTML = '';
+
+        if (stats && Object.keys(stats).length > 0) {
+            for (const [emoji, count] of Object.entries(stats)) {
+                if (count > 0) {
+                    statsHTML += `
+                        <div class="reaction-stat">
+                            <span class="reaction-emoji">${emoji}</span>
+                            <span class="reaction-stat-count">${count}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        if (statsHTML === '') {
+            statsHTML = '<p style="color: #6c757d; font-style: italic;">Пока нет реакций</p>';
+        }
+
+        reactionsContainer.innerHTML = statsHTML;
+
+        // Обновляем кнопки реакций
+        updateReactionButtons();
+    }
+
+    function updateReactionButtons() {
         const reactionButtons = document.querySelectorAll('.reaction-btn');
         const removeReactionBtn = document.getElementById('removeReactionBtn');
 
-        let currentUserReaction = null;
-
-        // Маппинг эмодзи на коды реакций
-        const emojiToCode = {
-            '👍': 1, '👎': 2, '❤️': 3, '😂': 4,
-            '😢': 5, '😠': 6, '😮': 7, '🔥': 8,
-            '🤔': 9, '👏': 10, '😕': 11, '🎉': 12
-        };
-
-        // Маппинг кодов на эмодзи
-        const codeToEmoji = {
-            1: '👍', 2: '👎', 3: '❤️', 4: '😂',
-            5: '😢', 6: '😠', 7: '😮', 8: '🔥',
-            9: '🤔', 10: '👏', 11: '😕', 12: '🎉'
-        };
-
-        // Загружаем статистику реакций
-        function loadReactionStats() {
-            fetch(`/api/reactions/article/${articleId}/stats`, {
-                credentials: 'include' // Важно для отправки сессионных куки
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success !== false) {
-                        updateReactionsDisplay(data);
-                    } else {
-                        console.error('Ошибка загрузки статистики:', data.error);
-                        showReactionsError(data.error || 'Ошибка загрузки реакций');
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки статистики реакций:', error);
-                    showReactionsError('Не удалось загрузить реакции');
-                });
-        }
-
-        function showReactionsError(message) {
-            reactionsContainer.innerHTML = `<p style="color: #dc3545;">${message}</p>`;
-        }
-
-        // Обновляем отображение статистики
-        function updateReactionsDisplay(data) {
-            const stats = data.stats;
-            currentUserReaction = data.userReaction;
-
-            // Обновляем статистику
-            let statsHTML = '';
-            if (stats && Object.keys(stats).length > 0) {
-                for (const [emoji, count] of Object.entries(stats)) {
-                    if (count > 0) {
-                        statsHTML += `
-                <div class="reaction-stat">
-                    <span class="reaction-emoji">${emoji}</span>
-                    <span class="reaction-stat-count">${count}</span>
-                </div>
-            `;
-                    }
+        reactionButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (currentUserReaction !== null) {
+                const emoji = btn.getAttribute('data-emoji');
+                const reactionCode = emojiToCode[emoji];
+                if (reactionCode === currentUserReaction) {
+                    btn.classList.add('active');
+                    removeReactionBtn.style.display = 'block';
                 }
             }
+        });
 
-            if (statsHTML === '') {
-                statsHTML = '<p style="color: #6c757d; font-style: italic;">Пока нет реакций</p>';
-            }
-
-            reactionsContainer.innerHTML = statsHTML;
-
-            // Обновляем кнопки реакций
-            updateReactionButtons();
+        if (currentUserReaction === null) {
+            removeReactionBtn.style.display = 'none';
         }
+    }
 
-        // Обновляем состояние кнопок реакций
-        function updateReactionButtons() {
-            reactionButtons.forEach(btn => {
-                btn.classList.remove('active');
-                if (currentUserReaction !== null) {
-                    const emoji = btn.getAttribute('data-emoji');
-                    const reactionCode = emojiToCode[emoji];
-                    if (reactionCode === currentUserReaction) {
-                        btn.classList.add('active');
-                        removeReactionBtn.style.display = 'block';
-                    }
-                }
-            });
+    // Обработчики для кнопок реакций
+    document.addEventListener('DOMContentLoaded', function() {
+        const reactionButtons = document.querySelectorAll('.reaction-btn');
+        const removeReactionBtn = document.getElementById('removeReactionBtn');
+        const articleId = [[${article.id}]];
 
-            if (currentUserReaction === null) {
-                removeReactionBtn.style.display = 'none';
-            }
-        }
-
-        // Обработчик клика по кнопке реакции
         reactionButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 const emoji = this.getAttribute('data-emoji');
-                setReaction(emoji);
+                setReaction(articleId, emoji);
             });
         });
 
-        // Обработчик удаления реакции
         removeReactionBtn.addEventListener('click', function() {
-            removeReaction();
+            removeReaction(articleId);
         });
+    });
 
-        // Установить реакцию
-        function setReaction(emoji) {
-            // Показываем индикатор загрузки
-            const originalText = removeReactionBtn.textContent;
-            removeReactionBtn.textContent = '⏳...';
-            removeReactionBtn.disabled = true;
+    async function setReaction(articleId, emoji) {
+        const removeReactionBtn = document.getElementById('removeReactionBtn');
+        const originalText = removeReactionBtn.textContent;
 
-            fetch(`/api/reactions/article/${articleId}?emoji=${encodeURIComponent(emoji)}`, {
+        // Показываем индикатор загрузки
+        removeReactionBtn.textContent = '⏳...';
+        removeReactionBtn.disabled = true;
+        document.body.classList.add('loading');
+
+        try {
+            const response = await fetch(`/api/reactions/article/${articleId}?emoji=${encodeURIComponent(emoji)}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                credentials: 'include' // Важно для отправки сессионных куки
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        updateReactionsDisplay(data);
-                    } else {
-                        alert('Ошибка: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка установки реакции:', error);
-                    alert('Произошла ошибка при установке реакции: ' + error.message);
-                })
-                .finally(() => {
-                    // Восстанавливаем кнопку
-                    removeReactionBtn.textContent = originalText;
-                    removeReactionBtn.disabled = false;
-                });
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                updateReactionsDisplay(data);
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Ошибка установки реакции:', error);
+            alert('Произошла ошибка при установке реакции: ' + error.message);
+        } finally {
+            // Восстанавливаем кнопку
+            removeReactionBtn.textContent = originalText;
+            removeReactionBtn.disabled = false;
+            document.body.classList.remove('loading');
         }
+    }
 
-        // Удалить реакцию
-        function removeReaction() {
-            // Показываем индикатор загрузки
-            const originalText = removeReactionBtn.textContent;
-            removeReactionBtn.textContent = '⏳...';
-            removeReactionBtn.disabled = true;
+    async function removeReaction(articleId) {
+        const removeReactionBtn = document.getElementById('removeReactionBtn');
+        const originalText = removeReactionBtn.textContent;
 
-            fetch(`/api/reactions/article/${articleId}`, {
+        // Показываем индикатор загрузки
+        removeReactionBtn.textContent = '⏳...';
+        removeReactionBtn.disabled = true;
+        document.body.classList.add('loading');
+
+        try {
+            const response = await fetch(`/api/reactions/article/${articleId}`, {
                 method: 'DELETE',
-                credentials: 'include' // Важно для отправки сессионных куки
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        updateReactionsDisplay(data);
-                    } else {
-                        alert('Ошибка: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка удаления реакции:', error);
-                    alert('Произошла ошибка при удалении реакции: ' + error.message);
-                })
-                .finally(() => {
-                    // Восстанавливаем кнопку
-                    removeReactionBtn.textContent = '❌ Убрать реакцию';
-                    removeReactionBtn.disabled = false;
-                });
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                updateReactionsDisplay(data);
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Ошибка удаления реакции:', error);
+            alert('Произошла ошибка при удалении реакции: ' + error.message);
+        } finally {
+            // Восстанавливаем кнопку
+            removeReactionBtn.textContent = '❌ Убрать реакцию';
+            removeReactionBtn.disabled = false;
+            document.body.classList.remove('loading');
+        }
+    }
+
+    // Функции для загрузки рецензий
+    async function loadArticleReviews(articleId) {
+        try {
+            const response = await fetch(`/api/articles/${articleId}/reviews`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reviews = await response.json();
+            displayArticleReviews(reviews);
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            showReviewsError('Не удалось загрузить рецензии');
+        }
+    }
+
+    function showReviewsError(message) {
+        const container = document.getElementById('reviewsList');
+        container.innerHTML = `<div class="error-message">${message}</div>`;
+    }
+
+    function displayArticleReviews(reviews) {
+        const container = document.getElementById('reviewsList');
+
+        if (!reviews || reviews.length === 0) {
+            container.innerHTML = '<p style="color: #6c757d; font-style: italic;">Пока нет рецензий на эту статью</p>';
+            return;
         }
 
-        // Загружаем статистику при загрузке страницы
-        loadReactionStats();
-    });
+        let reviewsHTML = '';
+        reviews.forEach(review => {
+            // Используем существующие поля из ArticleSimpleDTO
+            const reviewDate = review.createdAt ? new Date(review.createdAt).toLocaleDateString('ru-RU') : ' ';
+            const authorName = review.author ? review.author.name : 'Неизвестный автор';
+            const viewCount = review.viewCount || review.views || 0;
+
+            reviewsHTML += `
+        <div class="review-preview">
+            <h4>
+                <a href="/articles/${review.id}">${review.title}</a>
+            </h4>
+            <div class="review-meta">
+                <span>${authorName}</span> •
+                <span>${reviewDate}</span> •
+                <span>👁️ ${viewCount} просмотров</span>
+            </div>
+            <p>${review.shortDescription || 'Нет описания'}</p>
+        </div>
+    `;
+        });
+
+        container.innerHTML = reviewsHTML;
+    }
+
+    // Вспомогательная функция для форматирования даты
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
 </script>
 </body>
 </html>
