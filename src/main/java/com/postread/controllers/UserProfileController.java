@@ -5,6 +5,8 @@ import com.postread.data.Bookmark;
 import com.postread.repositories.ArticleRepository;
 import com.postread.repositories.UserRepository;
 import com.postread.security.User;
+import com.postread.services.ArticleManagementService;
+import com.postread.services.ArticleService;
 import com.postread.services.BookmarkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -33,6 +35,9 @@ public class UserProfileController {
 
     @Autowired
     private BookmarkService bookmarkService;
+
+    @Autowired
+    private ArticleManagementService articleManagementService;
 
     @PostMapping("/profile")
     public String updateProfile(@ModelAttribute("user") User userForm,
@@ -89,14 +94,19 @@ public class UserProfileController {
             user.setIcon("");
         }
 
-        // Получаем статьи пользователя
+        List<Article> drafts = articleManagementService.getUserDrafts(user.getId());
+        List<Article> published = articleManagementService.getUserPublishedArticles(user.getId());
+
+        model.addAttribute("drafts", drafts);
+        model.addAttribute("published", published);
+//        // Получаем статьи пользователя
         List<Article> userArticles = articleRepository.findByAuthorId(user.getId());
-        List<Article> drafts = userArticles.stream()
-                .filter(article -> !article.isPublished())
-                .collect(Collectors.toList());
-        List<Article> published = userArticles.stream()
-                .filter(Article::isPublished)
-                .collect(Collectors.toList());
+//        List<Article> drafts = userArticles.stream()
+//                .filter(article -> !article.isPublished())
+//                .collect(Collectors.toList());
+//        List<Article> published = userArticles.stream()
+//                .filter(Article::isPublished)
+//                .collect(Collectors.toList());
 
         // Получаем избранные статьи
         List<Bookmark> bookmarks = bookmarkService.getUserBookmarks(user.getId());

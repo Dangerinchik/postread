@@ -353,6 +353,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .btn-edit {
@@ -380,6 +381,7 @@
 
         .btn-delete:hover {
             background: #c82333;
+            transform: scale(1.05);
         }
 
         /* Статистика */
@@ -532,6 +534,17 @@
             border: 2px solid #3498db;
         }
 
+        /* Анимации для плавного удаления */
+        .article-card.removing {
+            opacity: 0;
+            transform: translateX(-100px);
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
         /* Адаптивность */
         @media (max-width: 768px) {
             .container {
@@ -561,6 +574,14 @@
             .avatar-options {
                 flex-direction: column;
                 align-items: stretch;
+            }
+
+            .article-actions {
+                flex-direction: column;
+            }
+
+            .article-actions .btn {
+                justify-content: center;
             }
         }
     </style>
@@ -595,15 +616,15 @@
         <div class="stats">
             <div class="stat-item">
                 <span>Статей всего:</span>
-                <span class="stat-value" th:text="${stats.totalArticles}">0</span>
+                <span class="stat-value" id="totalArticlesCount" th:text="${stats.totalArticles}">0</span>
             </div>
             <div class="stat-item">
                 <span>Опубликовано:</span>
-                <span class="stat-value" th:text="${stats.publishedArticles}">0</span>
+                <span class="stat-value" id="publishedArticlesCount" th:text="${stats.publishedArticles}">0</span>
             </div>
             <div class="stat-item">
                 <span>Черновиков:</span>
-                <span class="stat-value" th:text="${stats.draftArticles}">0</span>
+                <span class="stat-value" id="draftArticlesCount" th:text="${stats.draftArticles}">0</span>
             </div>
             <div class="stat-item">
                 <span>Просмотры:</span>
@@ -615,12 +636,11 @@
             <button class="nav-link active" onclick="showSection('profile')">👤 Профиль</button>
             <button class="nav-link" onclick="showSection('drafts')">📝 Черновики</button>
             <button class="nav-link" onclick="showSection('published')">📚 Опубликованные</button>
-            <!-- В раздел навигации добавьте: -->
             <button class="nav-link" onclick="showSection('bookmarks')">⭐ Избранное</button>
             <button class="nav-link" onclick="showSection('stats')">📊 Статистика</button>
             <a href="/articles/editor" class="nav-link">✨ Новая статья</a>
             <a href="/articles" class="nav-link">🏠 Все статьи</a>
-            <a href="/logout" class="nav-link" style="color: #dc3545;">🚪 Выйти</a>
+<!--            <a href="/logout" class="nav-link" style="color: #dc3545;">🚪 Выйти</a>-->
         </div>
     </div>
 
@@ -763,7 +783,7 @@
                 <p>Статьи, которые еще не опубликованы</p>
             </div>
 
-            <div class="articles-grid">
+            <div class="articles-grid" id="draftsGrid">
                 <div th:if="${#lists.isEmpty(drafts)}" class="empty-state" style="grid-column: 1 / -1;">
                     <h3>Черновиков нет</h3>
                     <p>У вас пока нет неопубликованных статей</p>
@@ -772,7 +792,8 @@
                     </a>
                 </div>
 
-                <div th:each="article : ${drafts}" class="article-card draft">
+                <!-- ИСПРАВЛЕННАЯ РАЗМЕТКА -->
+                <div th:each="article : ${drafts}" class="article-card draft" th:attr="data-article-id=${article.id}">
                     <h3 class="article-title">
                         <a th:href="@{/articles/{id}(id=${article.id})}"
                            th:text="${article.title}">Название статьи</a>
@@ -787,31 +808,32 @@
                         <a th:href="@{'/articles/edit/' + ${article.id}}" class="btn btn-small btn-edit">
                             ✏️ Редактировать
                         </a>
-                        <a th:href="@{'/articles/publish/' + ${article.id}}" class="btn btn-small btn-publish">
+                        <button class="btn btn-small btn-publish" th:attr="onclick=|publishArticle(${article.id})|">
                             📢 Опубликовать
-                        </a>
-                        <a th:href="@{'/articles/delete/' + ${article.id}}" class="btn btn-small btn-delete">
+                        </button>
+                        <button class="btn btn-small btn-delete">
                             🗑️ Удалить
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Раздел опубликованных статей -->
+        <!-- Раздел опубликованных -->
         <div id="published" class="section">
             <div class="section-header">
                 <h2>Опубликованные статьи</h2>
                 <p>Статьи, которые видны другим пользователям</p>
             </div>
 
-            <div class="articles-grid">
+            <div class="articles-grid" id="publishedGrid">
                 <div th:if="${#lists.isEmpty(published)}" class="empty-state" style="grid-column: 1 / -1;">
                     <h3>Опубликованных статей нет</h3>
                     <p>У вас пока нет опубликованных статей</p>
                 </div>
 
-                <div th:each="article : ${published}" class="article-card">
+                <!-- ИСПРАВЛЕННАЯ РАЗМЕТКА -->
+                <div th:each="article : ${published}" class="article-card" th:attr="data-article-id=${article.id}">
                     <h3 class="article-title">
                         <a th:href="@{/articles/{id}(id=${article.id})}"
                            th:text="${article.title}">Название статьи</a>
@@ -829,13 +851,15 @@
                         <a th:href="@{'/articles/edit/' + ${article.id}}" class="btn btn-small btn-edit">
                             ✏️ Редактировать
                         </a>
-                        <a th:href="@{'/articles/unpublish/' + ${article.id}}" class="btn btn-small btn-secondary">
+                        <button class="btn btn-small btn-secondary" th:attr="onclick=|unpublishArticle(${article.id})|">
                             📝 В черновики
-                        </a>
+                        </button>
+                        <button class="btn btn-small btn-delete">
+                            🗑️ Удалить
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
 
         <!-- Раздел статистики -->
         <div id="stats" class="section">
@@ -887,7 +911,7 @@
                     </a>
                 </div>
 
-                <div th:each="bookmark : ${bookmarks}" class="article-card">
+                <div th:each="bookmark : ${bookmarks}" class="article-card" data-article-id="${bookmark.article.id}">
                     <h3 class="article-title">
                         <a th:href="@{/articles/{id}(id=${bookmark.article.id})}"
                            th:text="${bookmark.article.title}">Название статьи</a>
@@ -916,11 +940,8 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
-
-
 
 <script>
     let isEditMode = false;
@@ -1283,6 +1304,228 @@
         }, 3000);
     }
 
+    // Улучшенная функция удаления с подтверждением
+    async function deleteArticleWithConfirm(articleId, articleTitle, articleType) {
+        const confirmed = await showDeleteConfirmation(articleTitle, articleType);
+        if (!confirmed) return;
+
+        showLoading('Удаление...');
+
+        try {
+            const response = await fetch(`/articles/delete/${articleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showTempMessage('✅ Статья успешно удалена', 'success');
+                // Плавно удаляем карточку из DOM
+                const articleCard = document.querySelector(`[data-article-id="${articleId}"]`);
+                if (articleCard) {
+                    articleCard.classList.add('removing');
+                    setTimeout(() => {
+                        articleCard.remove();
+                        // Обновляем статистику
+                        updateStatsAfterDeletion(articleType);
+                        // Если статей не осталось, показываем пустое состояние
+                        checkEmptyState();
+                    }, 300);
+                } else {
+                    // Если не нашли карточку, перезагружаем страницу через 2 секунды
+                    setTimeout(() => location.reload(), 2000);
+                }
+            } else {
+                showTempMessage('❌ ' + result.error, 'error');
+            }
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            showTempMessage('❌ Ошибка при удалении статьи', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Красивое модальное окно подтверждения
+    function showDeleteConfirmation(articleTitle, articleType) {
+        return new Promise((resolve) => {
+            // Создаем модальное окно
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                    width: 90%;
+                    text-align: center;
+                ">
+                    <div style="font-size: 3em; margin-bottom: 15px;">⚠️</div>
+                    <h3 style="margin-bottom: 15px; color: #dc3545;">Подтверждение удаления</h3>
+                    <p style="margin-bottom: 20px; line-height: 1.5;">
+                        Вы уверены, что хотите удалить <strong>"${articleTitle}"</strong>?
+                    </p>
+                    <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 25px;">
+                        Это действие нельзя отменить. ${articleType === 'черновик' ? 'Черновик' : 'Статья'} будет удалена безвозвратно.
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="confirmDelete" style="
+                            padding: 10px 20px;
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">Да, удалить</button>
+                        <button id="cancelDelete" style="
+                            padding: 10px 20px;
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">Отмена</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Обработчики событий
+            document.getElementById('confirmDelete').onclick = () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            };
+
+            document.getElementById('cancelDelete').onclick = () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            };
+
+            // Закрытие по клику на фон
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                }
+            };
+        });
+    }
+
+    // Функция для обновления статистики после удаления
+    function updateStatsAfterDeletion(articleType) {
+        // Обновляем счетчики в реальном времени
+        const totalArticlesElement = document.getElementById('totalArticlesCount');
+        const publishedArticlesElement = document.getElementById('publishedArticlesCount');
+        const draftArticlesElement = document.getElementById('draftArticlesCount');
+
+        if (totalArticlesElement) {
+            let total = parseInt(totalArticlesElement.textContent) || 0;
+            totalArticlesElement.textContent = Math.max(0, total - 1);
+        }
+
+        if (articleType === 'статью' && publishedArticlesElement) {
+            let published = parseInt(publishedArticlesElement.textContent) || 0;
+            publishedArticlesElement.textContent = Math.max(0, published - 1);
+        }
+
+        if (articleType === 'черновик' && draftArticlesElement) {
+            let drafts = parseInt(draftArticlesElement.textContent) || 0;
+            draftArticlesElement.textContent = Math.max(0, drafts - 1);
+        }
+    }
+
+    // Проверка пустого состояния
+    function checkEmptyState() {
+        const currentSection = document.querySelector('.section.active');
+        const articlesGrid = currentSection.querySelector('.articles-grid');
+        const articleCards = articlesGrid.querySelectorAll('.article-card:not(.removing)');
+
+        if (articleCards.length === 0) {
+            const sectionId = currentSection.id;
+            let emptyMessage = '';
+            let emptyDescription = '';
+            let buttonHtml = '';
+
+            switch(sectionId) {
+                case 'drafts':
+                    emptyMessage = 'Черновиков нет';
+                    emptyDescription = 'У вас пока нет неопубликованных статей';
+                    buttonHtml = '<a href="/articles/editor" class="btn btn-primary" style="margin-top: 15px;">✨ Создать первую статью</a>';
+                    break;
+                case 'published':
+                    emptyMessage = 'Опубликованных статей нет';
+                    emptyDescription = 'У вас пока нет опубликованных статей';
+                    break;
+                case 'bookmarks':
+                    emptyMessage = 'В избранном пока нет статей';
+                    emptyDescription = 'Сохраняйте интересные статьи, чтобы читать их позже';
+                    buttonHtml = '<a href="/articles" class="btn btn-primary" style="margin-top: 15px;">🔍 Найти статьи</a>';
+                    break;
+            }
+
+            articlesGrid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <h3>${emptyMessage}</h3>
+                    <p>${emptyDescription}</p>
+                    ${buttonHtml}
+                </div>
+            `;
+        }
+    }
+
+    // Вспомогательные функции для показа/скрытия загрузки
+    function showLoading(message = 'Загрузка...') {
+        let loadingDiv = document.getElementById('loadingOverlay');
+        if (!loadingDiv) {
+            loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingOverlay';
+            loadingDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                color: white;
+                font-size: 18px;
+            `;
+            document.body.appendChild(loadingDiv);
+        }
+        loadingDiv.innerHTML = `<div>⏳ ${message}</div>`;
+    }
+
+    function hideLoading() {
+        const loadingDiv = document.getElementById('loadingOverlay');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+    }
+
     // CSS анимация для подсветки
     const style = document.createElement('style');
     style.textContent = `
@@ -1406,6 +1649,141 @@
                 messageDiv.remove();
             }
         }, 3000);
+    }
+
+    // Функции для управления статьями
+    async function publishArticle(articleId) {
+        if (!confirm('Опубликовать эту статью?')) return;
+
+        try {
+            const response = await fetch(`/articles/publish/${articleId}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showTempMessage('✅ Статья опубликована!', 'success');
+                // Перезагружаем страницу через 2 секунды
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showTempMessage('❌ ' + result.error, 'error');
+            }
+        } catch (error) {
+            console.error('Ошибка публикации:', error);
+            showTempMessage('❌ Ошибка при публикации', 'error');
+        }
+    }
+
+    async function unpublishArticle(articleId) {
+        if (!confirm('Перевести статью в черновики?')) return;
+
+        try {
+            const response = await fetch(`/articles/unpublish/${articleId}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showTempMessage('✅ Статья переведена в черновики', 'success');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showTempMessage('❌ ' + result.error, 'error');
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            showTempMessage('❌ Ошибка при переводе в черновики', 'error');
+        }
+    }
+
+    // Вспомогательная функция для показа сообщений
+    function showTempMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert ${type === 'success' ? 'alert-success' : 'alert-error'}`;
+        messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        max-width: 300px;
+    `;
+        messageDiv.textContent = message;
+
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 3000);
+    }
+
+    // Добавьте этот код в конец вашего скрипта
+
+    // Обработчик для кнопок удаления черновиков
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('btn-delete') &&
+            event.target.closest('.article-card.draft')) {
+
+            const articleCard = event.target.closest('.article-card');
+            const articleId = articleCard.getAttribute('data-article-id');
+            const articleTitle = articleCard.querySelector('.article-title').textContent;
+
+            if (confirm(`Удалить черновик "${articleTitle}"?`)) {
+                deleteArticle(articleId, 'черновик');
+            }
+        }
+    });
+
+    // Обработчик для кнопок удаления опубликованных статей
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('btn-delete') &&
+            event.target.closest('.article-card:not(.draft)')) {
+
+            const articleCard = event.target.closest('.article-card');
+            const articleId = articleCard.getAttribute('data-article-id');
+            const articleTitle = articleCard.querySelector('.article-title').textContent;
+
+            if (confirm(`Удалить статью ?`)) {
+                deleteArticle(articleId, 'статью');
+            }
+        }
+    });
+
+    // Универсальная функция удаления
+    async function deleteArticle(articleId, articleType) {
+        try {
+            const response = await fetch(`/articles/delete/${articleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('✅ Удалено успешно!');
+                // Удаляем карточку из DOM
+                const articleCard = document.querySelector(`[data-article-id="${articleId}"]`);
+                if (articleCard) {
+                    articleCard.remove();
+                }
+                // Обновляем страницу через 1 секунду
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                alert('❌ Ошибка: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            alert('❌ Произошла ошибка при удалении');
+        }
     }
 </script>
 </body>

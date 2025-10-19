@@ -56,13 +56,7 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
         @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.blocks b WHERE a.id = :id ORDER BY b.order ASC")
         Optional<Article> findByIdWithBlocks(@Param("id") Long id);
 
-        // Исправленный метод для загрузки статьи с инициализированными данными
-        @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.author LEFT JOIN FETCH a.tags LEFT JOIN FETCH a.blocks b WHERE a.id = :id ORDER BY b.order ASC")
-        Optional<Article> findByIdWithAuthorAndTagsAndBlocks(@Param("id") Long id);
 
-        // Метод для загрузки без блоков (исправленное имя)
-        @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.author LEFT JOIN FETCH a.tags WHERE a.id = :id")
-        Optional<Article> findByIdWithAuthorAndTags(@Param("id") Long id);
 
         // Метод для загрузки блоков отдельным запросом
         @Query("SELECT b FROM ArticleBlock b WHERE b.article.id = :articleId ORDER BY b.order ASC")
@@ -77,4 +71,39 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
         // Дополнительный метод для получения статьи только с автором
         @Query("SELECT a FROM Article a LEFT JOIN FETCH a.author WHERE a.id = :id")
         Optional<Article> findByIdWithAuthor(@Param("id") Long id);
+
+        // НОВЫЕ МЕТОДЫ: Получение статей пользователя с фильтрацией
+        List<Article> findByAuthorAndPublishedTrueOrderByCreatedAtDesc(User author);
+        List<Article> findByAuthorAndPublishedFalseOrderByCreatedAtDesc(User author);
+
+        // Проверка принадлежности статьи пользователю
+        @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Article a WHERE a.id = :articleId AND a.author.id = :userId")
+        boolean existsByIdAndAuthorId(@Param("articleId") Long articleId, @Param("userId") Long userId);
+
+
+        // Сохранение с немедленной синхронизацией с БД
+        @Transactional
+        default Article saveAndFlush(Article article) {
+                Article saved = save(article);
+                flush();
+                return saved;
+        }
+
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM ArticleBlock b WHERE b.article.id = :articleId")
+        void deleteArticleBlocksByArticleId(@Param("articleId") Long articleId);
+
+        // Метод для получения статьи без блоков
+        @Query("SELECT a FROM Article a LEFT JOIN FETCH a.author LEFT JOIN FETCH a.tags WHERE a.id = :id")
+        Optional<Article> findByIdWithAuthorAndTags(@Param("id") Long id);
+
+        // Метод для получения статьи с блоками
+        @Query("SELECT DISTINCT a FROM Article a LEFT JOIN FETCH a.author LEFT JOIN FETCH a.tags LEFT JOIN FETCH a.blocks b WHERE a.id = :id ORDER BY b.order ASC")
+        Optional<Article> findByIdWithAuthorAndTagsAndBlocks(@Param("id") Long id);
+
+        // Принудительная синхронизация с БД
+        void flush();
+
+        List<Article> findByReviewForArticleId(Long articleId);
 }

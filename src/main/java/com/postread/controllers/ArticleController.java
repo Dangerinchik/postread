@@ -99,13 +99,13 @@ public class ArticleController {
 
     @GetMapping("/api/{id}")
     @ResponseBody
-    public ResponseEntity<?> getArticleApi(@PathVariable Long id) {
+    public ResponseEntity<?> getArticleData(@PathVariable Long id) {
         try {
-            // API endpoint тоже увеличивает счетчик просмотров
-            ArticleDTO articleDTO = articleService.getArticleDTO(id);
+            ArticleDTO articleDTO = articleService.getArticleDTOWithoutIncrement(id);
             return ResponseEntity.ok(articleDTO);
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Статья не найдена"));
         }
     }
 

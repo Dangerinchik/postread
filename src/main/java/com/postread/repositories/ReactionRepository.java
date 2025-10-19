@@ -26,4 +26,6 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
     void deleteByUserAndArticle(User user, Article article);
 
     int countByArticleIdAndType(Long articleId, Integer type);
+
+    void deleteByArticleId(Long articleId);
 }
