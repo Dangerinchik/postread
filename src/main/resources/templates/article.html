@@ -1141,7 +1141,9 @@
         <a th:if="${article.review}"
            th:href="@{/articles/{id}(id=${article.reviewForArticle.id})}"
            class="btn btn-primary">📖 Перейти к оригиналу</a>
-
+        <button class="btn btn-primary" id="bookmarkBtn" onclick="toggleBookmark([[${article.id}]])">
+            ⭐ Добавить в избранное
+        </button>
         <a th:href="@{'/articles/edit/' + ${article.id}}" class="btn btn-edit">✏️ Редактировать</a>
         <a th:href="@{'/articles/delete/' + ${article.id}}" class="btn btn-delete">🗑️ Удалить</a>
     </div>
@@ -1887,6 +1889,164 @@
             minute: '2-digit'
         });
     }
+
+
+    // Функции для работы с избранным (с улучшенной отладкой)
+    let currentBookmarkState = false;
+
+    // Загружаем статус избранного при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Page loaded, checking bookmark status...');
+        loadBookmarkStatus([[${article.id}]]);
+    });
+
+    // Загрузка статуса избранного
+    async function loadBookmarkStatus(articleId) {
+        try {
+            console.log('🔍 Loading bookmark status for article:', articleId);
+            const response = await fetch(`/bookmarks/status/${articleId}`, {
+                credentials: 'include'
+            });
+
+            console.log('📡 Status response:', response.status, response.statusText);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📊 Bookmark status data:', data);
+                currentBookmarkState = data.bookmarked;
+                updateBookmarkButton();
+            } else {
+                console.error('❌ Failed to load bookmark status:', response.status);
+                if (response.status === 401) {
+                    console.log('🔐 User not authenticated, hiding bookmark button');
+                    const bookmarkBtn = document.getElementById('bookmarkBtn');
+                    if (bookmarkBtn) {
+                        bookmarkBtn.style.display = 'none';
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки статуса избранного:', error);
+        }
+    }
+
+    // Обновление вида кнопки
+    function updateBookmarkButton() {
+        const btn = document.getElementById('bookmarkBtn');
+        if (btn) {
+            if (currentBookmarkState) {
+                btn.innerHTML = '❌ Удалить из избранного';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            } else {
+                btn.innerHTML = '⭐ Добавить в избранное';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+            }
+            console.log('🎨 Bookmark button updated, state:', currentBookmarkState);
+        }
+    }
+
+    async function toggleBookmark(articleId) {
+        const btn = document.getElementById('bookmarkBtn');
+        if (!btn) {
+            console.error('❌ Bookmark button not found!');
+            return;
+        }
+
+        console.log('🔄 toggleBookmark called for article:', articleId);
+
+        try {
+            // Показываем индикатор загрузки
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳...';
+            btn.disabled = true;
+
+            console.log('📡 Sending POST request to /bookmarks/toggle/' + articleId);
+
+            const response = await fetch(`/bookmarks/toggle/${articleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response OK:', response.ok);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('📊 Response data:', data);
+
+            if (data.success) {
+                currentBookmarkState = data.bookmarked;
+                updateBookmarkButton();
+                showBookmarkMessage(data.message, 'success');
+                console.log('✅ Bookmark toggled successfully:', data.bookmarked);
+            } else {
+                showBookmarkMessage(data.message || 'Ошибка', 'error');
+                console.error('❌ Bookmark toggle failed:', data.message);
+            }
+
+        } catch (error) {
+            console.error('❌ Network error:', error);
+            showBookmarkMessage('Ошибка сети: ' + error.message, 'error');
+        } finally {
+            btn.disabled = false;
+            updateBookmarkButton();
+        }
+    }
+
+    // Функция для показа сообщений
+    function showBookmarkMessage(message, type) {
+        // Удаляем старые сообщения
+        const existingMessages = document.querySelectorAll('.bookmark-message');
+        existingMessages.forEach(msg => msg.remove());
+
+        // Создаем новое сообщение
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert ${type === 'success' ? 'alert-success' : 'alert-error'} bookmark-message`;
+        messageDiv.style.cssText = `
+        margin: 10px 0;
+        padding: 10px 15px;
+        border-radius: 6px;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 300px;
+    `;
+        messageDiv.innerHTML = `<strong>${type === 'success' ? '✅' : '❌'}</strong> ${message}`;
+
+        document.body.appendChild(messageDiv);
+
+        // Автоудаление через 3 секунды
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const articleId = [[${article.id}]];
+
+        // Загружаем статус избранного
+        loadBookmarkStatus(articleId);
+
+        // Добавляем обработчик для кнопки избранного
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        if (bookmarkBtn) {
+            bookmarkBtn.addEventListener('click', function() {
+                toggleBookmark(articleId);
+            });
+        }
+    });
+
 </script>
 </body>
 </html>

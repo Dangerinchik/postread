@@ -1,9 +1,11 @@
 package com.postread.controllers;
 
 import com.postread.data.Article;
+import com.postread.data.Bookmark;
 import com.postread.repositories.ArticleRepository;
 import com.postread.repositories.UserRepository;
 import com.postread.security.User;
+import com.postread.services.BookmarkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -29,43 +31,8 @@ public class UserProfileController {
     @Autowired
     private ArticleRepository articleRepository;
 
-    @GetMapping("/profile")
-    public String userProfile(Model model, Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findByName(username)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
-
-        // Инициализируем null поля
-        if (user.getDescription() == null) {
-            user.setDescription("");
-        }
-        if (user.getIcon() == null) {
-            user.setIcon("");
-        }
-
-        // Получаем статьи пользователя
-        List<Article> userArticles = articleRepository.findByAuthorId(user.getId());
-        List<Article> drafts = userArticles.stream()
-                .filter(article -> !article.isPublished())
-                .collect(Collectors.toList());
-        List<Article> published = userArticles.stream()
-                .filter(Article::isPublished)
-                .collect(Collectors.toList());
-
-        // Статистика
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalArticles", userArticles.size());
-        stats.put("publishedArticles", published.size());
-        stats.put("draftArticles", drafts.size());
-        stats.put("totalViews", userArticles.stream().mapToInt(Article::getViewCount).sum());
-
-        model.addAttribute("user", user);
-        model.addAttribute("drafts", drafts);
-        model.addAttribute("published", published);
-        model.addAttribute("stats", stats);
-
-        return "user-profile";
-    }
+    @Autowired
+    private BookmarkService bookmarkService;
 
     @PostMapping("/profile")
     public String updateProfile(@ModelAttribute("user") User userForm,
@@ -106,5 +73,49 @@ public class UserProfileController {
         }
 
         return "redirect:/user/profile";
+    }
+
+    @GetMapping("/profile")
+    public String userProfile(Model model, Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByName(username)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        // Инициализируем null поля
+        if (user.getDescription() == null) {
+            user.setDescription("");
+        }
+        if (user.getIcon() == null) {
+            user.setIcon("");
+        }
+
+        // Получаем статьи пользователя
+        List<Article> userArticles = articleRepository.findByAuthorId(user.getId());
+        List<Article> drafts = userArticles.stream()
+                .filter(article -> !article.isPublished())
+                .collect(Collectors.toList());
+        List<Article> published = userArticles.stream()
+                .filter(Article::isPublished)
+                .collect(Collectors.toList());
+
+        // Получаем избранные статьи
+        List<Bookmark> bookmarks = bookmarkService.getUserBookmarks(user.getId());
+        long bookmarksCount = bookmarkService.getBookmarksCount(user.getId());
+
+        // Статистика
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalArticles", userArticles.size());
+        stats.put("publishedArticles", published.size());
+        stats.put("draftArticles", drafts.size());
+        stats.put("totalViews", userArticles.stream().mapToInt(Article::getViewCount).sum());
+
+        model.addAttribute("user", user);
+        model.addAttribute("drafts", drafts);
+        model.addAttribute("published", published);
+        model.addAttribute("bookmarks", bookmarks);
+        model.addAttribute("bookmarksCount", bookmarksCount);
+        model.addAttribute("stats", stats);
+
+        return "user-profile";
     }
 }

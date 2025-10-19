@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Избранные статьи</title>
+    <style>
+        /* Используйте стили из user-profile.html */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .article-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #ffd700;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .article-title {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .article-title a:hover {
+            color: #3498db;
+        }
+
+        .article-meta {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        .article-description {
+            color: #495057;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .article-stats {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #138496;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+
+        .back-link:hover {
+            background: #2980b9;
+        }
+
+        .bookmarks-count {
+            background: #ffd700;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⭐ Избранные статьи <span class="bookmarks-count" th:text="${bookmarksCount}">0</span></h1>
+        <p>Статьи, которые вы сохранили для чтения позже</p>
+    </div>
+
+    <div class="articles-grid">
+        <div class="empty-state" th:if="${bookmarks == null or bookmarks.isEmpty()}">
+            <h3>В избранном пока нет статей</h3>
+            <p>Сохраняйте интересные статьи, нажимая на кнопку "⭐ Добавить в избранное" на страницах статей</p>
+            <a href="/articles" class="back-link">🔍 Найти интересные статьи</a>
+        </div>
+
+        <div th:each="bookmark : ${bookmarks}" class="article-card">
+            <h3 class="article-title">
+                <a th:href="@{/articles/{id}(id=${bookmark.article.id})}"
+                   th:text="${bookmark.article.title}">Название статьи</a>
+            </h3>
+            <div class="article-meta">
+                Добавлено: <span th:text="${#temporals.format(bookmark.addedAt, 'dd.MM.yyyy HH:mm')}">дата</span>
+            </div>
+            <div class="article-description" th:text="${bookmark.article.shortDescription}">
+                Краткое описание...
+            </div>
+            <div class="article-stats">
+                <span>👁️ <span th:text="${bookmark.article.viewCount}">0</span> просмотров</span>
+                •
+                <span th:if="${bookmark.article.author != null}">
+                        Автор: <span th:text="${bookmark.article.author.name}">Автор</span>
+                    </span>
+            </div>
+            <div class="article-actions">
+                <button class="btn btn-secondary"
+                        onclick="removeBookmark([[${bookmark.article.id}]])"
+                        th:id="'removeBookmark-' + ${bookmark.article.id}">
+                    ❌ Удалить из избранного
+                </button>
+                <a th:href="@{'/articles/edit/' + ${bookmark.article.id}}"
+                   class="btn btn-edit"
+                   th:if="${bookmark.article.author != null and bookmark.article.author.id == user.id}">
+                    ✏️ Редактировать
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;" th:if="${not (bookmarks == null or bookmarks.isEmpty())}">
+        <a href="/user/profile" class="back-link">← Назад в профиль</a>
+    </div>
+</div>
+
+<script>
+    // Функция удаления из избранного
+    async function removeBookmark(articleId) {
+        const btn = document.getElementById('removeBookmark-' + articleId);
+        const originalText = btn.innerHTML;
+
+        try {
+            btn.innerHTML = '⏳...';
+            btn.disabled = true;
+
+            const response = await fetch(`/bookmarks/toggle/${articleId}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && !data.bookmarked) {
+                    // Удаляем карточку статьи из DOM
+                    const articleCard = btn.closest('.article-card');
+                    articleCard.style.opacity = '0';
+                    setTimeout(() => {
+                        articleCard.remove();
+                        updateBookmarksCount();
+                    }, 300);
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка удаления из избранного:', error);
+            alert('Ошибка при удалении из избранного');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    // Обновление счетчика избранного
+    function updateBookmarksCount() {
+        const countElement = document.querySelector('.bookmarks-count');
+        const articlesGrid = document.querySelector('.articles-grid');
+        const currentCount = parseInt(countElement.textContent);
+        const newCount = currentCount - 1;
+
+        countElement.textContent = newCount;
+
+        if (newCount === 0) {
+            showEmptyState();
+        }
+    }
+
+    // Показ состояния "пусто"
+    function showEmptyState() {
+        const articlesGrid = document.querySelector('.articles-grid');
+        articlesGrid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <h3>В избранном пока нет статей</h3>
+                    <p>Сохраняйте интересные статьи, нажимая на кнопку "⭐ Добавить в избранное" на страницах статей</p>
+                    <a href="/articles" class="back-link">🔍 Найти интересные статьи</a>
+                </div>
+            `;
+    }
+</script>
+</body>
+</html>

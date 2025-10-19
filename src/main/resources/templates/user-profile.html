@@ -615,6 +615,8 @@
             <button class="nav-link active" onclick="showSection('profile')">👤 Профиль</button>
             <button class="nav-link" onclick="showSection('drafts')">📝 Черновики</button>
             <button class="nav-link" onclick="showSection('published')">📚 Опубликованные</button>
+            <!-- В раздел навигации добавьте: -->
+            <button class="nav-link" onclick="showSection('bookmarks')">⭐ Избранное</button>
             <button class="nav-link" onclick="showSection('stats')">📊 Статистика</button>
             <a href="/articles/editor" class="nav-link">✨ Новая статья</a>
             <a href="/articles" class="nav-link">🏠 Все статьи</a>
@@ -868,8 +870,57 @@
                 </p>
             </div>
         </div>
+
+        <!-- Раздел избранного -->
+        <div id="bookmarks" class="section">
+            <div class="section-header">
+                <h2>⭐ Избранные статьи</h2>
+                <p>Статьи, которые вы сохранили для чтения позже</p>
+            </div>
+
+            <div class="articles-grid" id="bookmarksGrid">
+                <div class="empty-state" th:if="${bookmarks == null or bookmarks.isEmpty()}">
+                    <h3>В избранном пока нет статей</h3>
+                    <p>Сохраняйте интересные статьи, чтобы читать их позже</p>
+                    <a href="/articles" class="btn btn-primary" style="margin-top: 15px;">
+                        🔍 Найти статьи
+                    </a>
+                </div>
+
+                <div th:each="bookmark : ${bookmarks}" class="article-card">
+                    <h3 class="article-title">
+                        <a th:href="@{/articles/{id}(id=${bookmark.article.id})}"
+                           th:text="${bookmark.article.title}">Название статьи</a>
+                    </h3>
+                    <div class="article-meta">
+                        Добавлено: <span th:text="${#temporals.format(bookmark.addedAt, 'dd.MM.yyyy HH:mm')}">дата</span>
+                    </div>
+                    <div class="article-description" th:text="${bookmark.article.shortDescription}">
+                        Краткое описание...
+                    </div>
+                    <div class="article-stats">
+                        <span>👁️ <span th:text="${bookmark.article.viewCount}">0</span> просмотров</span>
+                    </div>
+                    <div class="article-actions">
+                        <button class="btn btn-small btn-secondary"
+                                onclick="toggleBookmark([[${bookmark.article.id}]])"
+                                th:id="'bookmarkBtn-' + ${bookmark.article.id}">
+                            ❌ Удалить из избранного
+                        </button>
+                        <a th:href="@{'/articles/edit/' + ${bookmark.article.id}}"
+                           class="btn btn-small btn-edit"
+                           th:if="${bookmark.article.author.id == user.id}">
+                            ✏️ Редактировать
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
+
 
 <script>
     let isEditMode = false;
@@ -892,7 +943,7 @@
         updateCharCount(); // Инициализация счетчика
     });
 
-    // Переключение между разделами
+    // Обновите функцию showSection для поддержки загрузки избранного
     function showSection(sectionId) {
         // Скрыть все разделы
         document.querySelectorAll('.section').forEach(section => {
@@ -912,6 +963,17 @@
         if (isEditMode) {
             cancelEdit();
         }
+
+        // Если переключились на избранное, обновляем счетчик
+        if (sectionId === 'bookmarks') {
+            updateBookmarksCounter();
+        }
+    }
+
+    // Функция для обновления счетчика избранного
+    function updateBookmarksCounter() {
+        // Можно добавить логику для динамической загрузки избранного
+        console.log('Загрузка избранного...');
     }
 
     // Включение/выключение режима редактирования
@@ -1231,6 +1293,120 @@
         }
     `;
     document.head.appendChild(style);
+
+    // Функция для переключения избранного
+    async function toggleBookmark(articleId) {
+        console.log('🔄 toggleBookmark called for article:', articleId);
+
+        try {
+            const response = await fetch(`/bookmarks/toggle/${articleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            console.log('📡 Response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('📊 Response data:', data);
+
+            if (data.success) {
+                // Обновляем UI
+                const btn = document.getElementById('bookmarkBtn-' + articleId);
+                if (btn) {
+                    if (data.bookmarked) {
+                        btn.innerHTML = '⭐ В избранном';
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-primary');
+                    } else {
+                        // Удаляем карточку из DOM
+                        const articleCard = btn.closest('.article-card');
+                        articleCard.style.opacity = '0';
+                        setTimeout(() => {
+                            articleCard.remove();
+                            updateBookmarksCount();
+                            // Если нет больше закладок, показываем пустое состояние
+                            if (document.querySelectorAll('.article-card').length === 0) {
+                                showEmptyBookmarksState();
+                            }
+                        }, 300);
+                    }
+                }
+
+                // Показываем сообщение
+                showBookmarkMessage(data.message, 'success');
+            } else {
+                showBookmarkMessage(data.message || 'Ошибка', 'error');
+            }
+
+        } catch (error) {
+            console.error('❌ Network error:', error);
+            showBookmarkMessage('Ошибка сети: ' + error.message, 'error');
+        }
+    }
+
+    // Обновление счетчика избранного
+    function updateBookmarksCount() {
+        const countElement = document.querySelector('.bookmarks-count');
+        if (countElement) {
+            const currentCount = parseInt(countElement.textContent);
+            const newCount = Math.max(0, currentCount - 1);
+            countElement.textContent = newCount;
+        }
+    }
+
+    // Показ состояния "пусто" для избранного
+    function showEmptyBookmarksState() {
+        const bookmarksGrid = document.getElementById('bookmarksGrid');
+        if (bookmarksGrid) {
+            bookmarksGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <h3>В избранном пока нет статей</h3>
+                <p>Сохраняйте интересные статьи, чтобы читать их позже</p>
+                <a href="/articles" class="btn btn-primary" style="margin-top: 15px;">
+                    🔍 Найти статьи
+                </a>
+            </div>
+        `;
+        }
+    }
+
+    // Функция для показа сообщений
+    function showBookmarkMessage(message, type) {
+        // Удаляем старые сообщения
+        const existingMessages = document.querySelectorAll('.bookmark-message');
+        existingMessages.forEach(msg => msg.remove());
+
+        // Создаем новое сообщение
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert ${type === 'success' ? 'alert-success' : 'alert-error'} bookmark-message`;
+        messageDiv.style.cssText = `
+        margin: 10px 0;
+        padding: 10px 15px;
+        border-radius: 6px;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 300px;
+    `;
+        messageDiv.innerHTML = `<strong>${type === 'success' ? '✅' : '❌'}</strong> ${message}`;
+
+        document.body.appendChild(messageDiv);
+
+        // Автоудаление через 3 секунды
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 3000);
+    }
 </script>
 </body>
 </html>

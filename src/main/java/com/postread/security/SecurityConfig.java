@@ -15,6 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -41,18 +45,24 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Полностью отключаем CSRF
-                .cors(cors -> cors
-                        .configurationSource(request -> {
-                            CorsConfiguration config = new CorsConfiguration();
-                            config.addAllowedOrigin("*");
-                            config.addAllowedMethod("*");
-                            config.addAllowedHeader("*");
-                            return config;
-                        })
-                )
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
@@ -60,34 +70,80 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        // Публичные endpoints
+                        // Статические ресурсы - публичные
                         .requestMatchers(
-                                "/auth/**",
+                                "/",
+                                "/home",
+                                "/index",
+                                "/favicon.ico",
+                                "/error",
                                 "/uploads/**",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
                                 "/webjars/**",
-                                "/error"
+                                "/static/**"
                         ).permitAll()
 
-                        // API endpoints - требуют аутентификации
-                        .requestMatchers("/api/reactions/**").authenticated()
-                        .requestMatchers("/api/**").permitAll() // Остальные API публичные
-
-                        // Endpoints для аутентифицированных пользователей
+                        // Аутентификация - публичные
                         .requestMatchers(
-                                "/articles/editor",
-                                "/articles/create-form",
-                                "/articles/create",
+                                "/auth/**",
+                                "/login",
+                                "/register",
+                                "/signup"
+                        ).permitAll()
+
+                        // Статьи - публичные (чтение)
+                        .requestMatchers(
+                                "/articles",
+                                "/articles/**",
+                                "/articles/search",
+                                "/articles/search-advanced",
+                                "/articles/api/**"
+                        ).permitAll()
+
+                        // API endpoints - детальная настройка
+                        .requestMatchers(
+                                "/api/articles/**",
+                                "/api/tags/**",
+                                "/api/comments/**",
+                                "/api/search/**",
+                                "/api/upload/**"
+                        ).permitAll()
+
+                        // Bookmark status check - публичный
+                        .requestMatchers("/bookmarks/status/**").permitAll()
+
+                        // Bookmark management - требует аутентификации
+                        .requestMatchers("/bookmarks/**").authenticated()
+
+                        // Reactions - требуют аутентификации
+                        .requestMatchers("/api/reactions/**").authenticated()
+
+                        // Создание и редактирование статей - требует аутентификации
+                        .requestMatchers(
+                                "/articles/editor/**",
+                                "/articles/create/**",
                                 "/articles/edit/**",
-                                "/articles/delete/**"
+                                "/articles/delete/**",
+                                "/articles/publish/**",
+                                "/articles/unpublish/**"
+                        ).authenticated()
+
+                        // Пользовательские endpoints - требуют аутентификации
+                        .requestMatchers(
+                                "/user/**",
+                                "/profile/**",
+                                "/my/**"
                         ).authenticated()
 
                         // Административные endpoints
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/admin/**",
+                                "/management/**"
+                        ).hasRole("ADMIN")
 
-                        // Все остальные запросы разрешены
+                        // Все остальные запросы - публичные
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
@@ -95,6 +151,8 @@ public class SecurityConfig {
                         .loginProcessingUrl("/auth/login")
                         .defaultSuccessUrl("/articles", true)
                         .failureUrl("/auth/login?error=true")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -103,6 +161,11 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
+                )
+                .rememberMe(remember -> remember
+                        .key("uniqueAndSecret")
+                        .tokenValiditySeconds(86400) // 24 hours
+                        .rememberMeParameter("remember-me")
                 )
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
